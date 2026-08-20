@@ -352,6 +352,22 @@ export function Dashboards() {
   const handleSaveSettings = async () => {
     if (!salonData) return;
     setIsSavingSettings(true);
+
+    const cId = salonCountry ? parseInt(salonCountry.toString()) : null;
+    const selectedCountryObj = countriesList.find(c => c.id === cId);
+    
+    let currencyToSave = salonSettingsData.currency;
+    let countryCodeToSave = salonData.country;
+
+    if (selectedCountryObj) {
+      currencyToSave = selectedCountryObj.currency_en || currencyToSave;
+      const isoMap: Record<number, string> = {
+        1: 'SA', 2: 'EG', 3: 'AE', 4: 'KW', 5: 'QA', 6: 'BH', 7: 'OM', 8: 'JO', 
+        9: 'PS', 10: 'LB', 11: 'SY', 12: 'IQ', 13: 'YE', 14: 'SD', 15: 'LY', 16: 'TN', 
+        17: 'DZ', 18: 'MA', 19: 'MR', 20: 'DJ', 21: 'SO', 22: 'KM'
+      };
+      countryCodeToSave = isoMap[selectedCountryObj.id] || countryCodeToSave;
+    }
     const { error } = await supabase.from('salons').update({
       evolution_instance: evoInstance,
       evolution_api_key: evoApiKey,
@@ -372,7 +388,8 @@ export function Dashboards() {
       working_hours_start: salonSettingsData.working_hours_start,
       working_hours_end: salonSettingsData.working_hours_end,
       type: salonSettingsData.salon_type,
-      currency: salonSettingsData.currency,
+      currency: currencyToSave,
+      country: countryCodeToSave,
       images: salonSettingsData.images,
       social_media: {
         instagram: salonSettingsData.instagram,

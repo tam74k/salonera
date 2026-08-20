@@ -91,6 +91,7 @@ export function AuthFlow({ onLogin }: { onLogin: (role: 'client' | 'artist' | 'a
              name_en: salonNameEn,
              type: 'both',
              country: 'SA',
+             country_id: 1,
              currency: 'SAR',
              mobile: mobile
          });

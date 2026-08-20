@@ -676,9 +676,10 @@ export function ClientApp() {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
 
           {salons.filter(s => {
-            if (filterCountry && s.country_id?.toString() !== filterCountry.toString()) return false;
-            if (filterGov && s.governorate_id?.toString() !== filterGov.toString()) return false;
-            if (filterCity && s.city_id?.toString() !== filterCity.toString()) return false;
+            // Allow salons with no country assigned yet to appear as a fallback so they aren't hidden from their owners
+            if (filterCountry && s.country_id && s.country_id?.toString() !== filterCountry.toString()) return false;
+            if (filterGov && s.governorate_id && s.governorate_id?.toString() !== filterGov.toString()) return false;
+            if (filterCity && s.city_id && s.city_id?.toString() !== filterCity.toString()) return false;
             if (s.type && s.type !== 'both' && s.type !== filterSalonType) return false;
             return true;
           }).map((salon, i) => (

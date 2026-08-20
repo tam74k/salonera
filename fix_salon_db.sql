@@ -1,0 +1,2 @@
+ALTER TABLE public.salons
+ADD COLUMN IF NOT EXISTS type TEXT DEFAULT 'both';

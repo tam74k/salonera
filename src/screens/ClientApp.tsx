@@ -15,6 +15,54 @@ export function ClientApp() {
   const t = translations[lang];
 
   const [step, setStep] = useState<BookingStep>('salons');
+  
+  // Location filters
+  const [countriesList, setCountriesList] = useState<any[]>([]);
+  const [governoratesList, setGovernoratesList] = useState<any[]>([]);
+  const [citiesList, setCitiesList] = useState<any[]>([]);
+  
+  const [filterCountry, setFilterCountry] = useState<number | string>('');
+  const [filterGov, setFilterGov] = useState<number | string>('');
+  const [filterCity, setFilterCity] = useState<number | string>('');
+
+  useEffect(() => {
+    const fetchLocs = async () => {
+      const [cRes, gRes, ciRes] = await Promise.all([
+        supabase.from('countries').select('*').order('name_ar'),
+        supabase.from('governorates').select('*').order('name_ar'),
+        supabase.from('cities').select('*').order('name_ar')
+      ]);
+      if (cRes.data) setCountriesList(cRes.data);
+      if (gRes.data) setGovernoratesList(gRes.data);
+      if (ciRes.data) setCitiesList(ciRes.data);
+    };
+    fetchLocs();
+    // Load user's saved location preferences if any
+    const fetchUserProfile = async () => {
+      if (user) {
+        const { data } = await supabase.from('profiles').select('country_id, governorate_id, city_id').eq('id', user.id).single();
+        if (data) {
+          if (data.country_id) setFilterCountry(data.country_id.toString());
+          if (data.governorate_id) setFilterGov(data.governorate_id.toString());
+          if (data.city_id) setFilterCity(data.city_id.toString());
+        }
+      }
+    };
+    fetchUserProfile();
+  }, [user]);
+
+  // Save profile location automatically
+  const updateProfileLocation = async (country: string | number, gov: string | number, city: string | number) => {
+    if (user) {
+      await supabase.from('profiles').update({
+        country_id: country ? parseInt(country.toString()) : null,
+        governorate_id: gov ? parseInt(gov.toString()) : null,
+        city_id: city ? parseInt(city.toString()) : null
+      }).eq('id', user.id);
+    }
+  };
+
+
   const [selectedSalon, setSelectedSalon] = useState<any>(null);
   const [selectedServices, setSelectedServices] = useState<string[]>([]);
   const [selectedDate, setSelectedDate] = useState<string>('');
@@ -516,8 +564,43 @@ export function ClientApp() {
           )}
         </div>
 
+        
+        {/* Filters */}
+        <div className="bg-white p-6 rounded-3xl shadow-sm border border-slate-100 mb-8">
+          <h3 className="text-lg font-bold text-slate-900 mb-4 flex items-center gap-2">
+            <MapPin className="w-5 h-5 text-indigo-600" />
+            {isAr ? 'تصفية الصالونات حسب المنطقة' : 'Filter Salons by Region'}
+          </h3>
+          <div className="grid md:grid-cols-3 gap-4">
+            <div>
+              <select value={filterCountry} onChange={e => { const val = e.target.value; setFilterCountry(val); setFilterGov(''); setFilterCity(''); updateProfileLocation(val, '', ''); }} className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 outline-none font-medium">
+                <option value="">{isAr ? 'كل الدول' : 'All Countries'}</option>
+                {countriesList.map(c => <option key={c.id} value={c.id}>{isAr ? c.name_ar : c.name_en}</option>)}
+              </select>
+            </div>
+            <div>
+              <select value={filterGov} onChange={e => { const val = e.target.value; setFilterGov(val); setFilterCity(''); updateProfileLocation(filterCountry, val, ''); }} disabled={!filterCountry} className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 outline-none font-medium disabled:opacity-50">
+                <option value="">{isAr ? 'كل المحافظات' : 'All Governorates'}</option>
+                {governoratesList.filter(g => g.country_id.toString() === filterCountry.toString()).map(g => <option key={g.id} value={g.id}>{isAr ? g.name_ar : g.name_en}</option>)}
+              </select>
+            </div>
+            <div>
+              <select value={filterCity} onChange={e => { const val = e.target.value; setFilterCity(val); updateProfileLocation(filterCountry, filterGov, val); }} disabled={!filterGov} className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 outline-none font-medium disabled:opacity-50">
+                <option value="">{isAr ? 'كل المدن' : 'All Cities'}</option>
+                {citiesList.filter(ci => ci.governorate_id.toString() === filterGov.toString()).map(city => <option key={city.id} value={city.id}>{isAr ? city.name_ar : city.name_en}</option>)}
+              </select>
+            </div>
+          </div>
+        </div>
+
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {salons.map((salon, i) => (
+
+          {salons.filter(s => {
+            if (filterCountry && s.country_id?.toString() !== filterCountry.toString()) return false;
+            if (filterGov && s.governorate_id?.toString() !== filterGov.toString()) return false;
+            if (filterCity && s.city_id?.toString() !== filterCity.toString()) return false;
+            return true;
+          }).map((salon, i) => (
             <motion.div 
               key={salon.id}
               initial={{ opacity: 0, y: 20 }}

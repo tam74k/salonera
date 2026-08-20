@@ -82,7 +82,7 @@ function MainLayout() {
             <SuperAdminSettings key="superadmin" />
           ) : (
             <>
-              {role === 'guest' && <AuthFlow key="auth" onLogin={(r) => setRole(r)} />}
+              {role === 'guest' && <AuthFlow onLogin={(r) => setRole(r)} />}
               {role === 'client' && <ClientApp key="client" />}
               {(role === 'artist' || role === 'admin' || role === 'cashier' || role === 'super_admin') && <Dashboards key="dashboards" />}
             </>

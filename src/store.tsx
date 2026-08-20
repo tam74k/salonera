@@ -14,6 +14,8 @@ interface AppContextType {
   user: User | null;
   session: Session | null;
   isLoadingAuth: boolean;
+  headerTitle: string;
+  setHeaderTitle: (title: string) => void;
 }
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
@@ -24,6 +26,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [isLoadingAuth, setIsLoadingAuth] = useState(true);
+  const [headerTitle, setHeaderTitle] = useState('');
 
   useEffect(() => {
     document.documentElement.dir = lang === 'ar' ? 'rtl' : 'ltr';
@@ -79,7 +82,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   };
 
   return (
-    <AppContext.Provider value={{ lang, setLang, isAr: lang === 'ar', role, setRole, user, session, isLoadingAuth }}>
+    <AppContext.Provider value={{ lang, setLang, isAr: lang === 'ar', role, setRole, user, session, isLoadingAuth, headerTitle, setHeaderTitle }}>
       {children}
     </AppContext.Provider>
   );

@@ -11,7 +11,7 @@ import { translations } from './i18n';
 import { supabase } from './lib/supabase';
 
 function MainLayout() {
-  const { lang, setLang, isAr, role, setRole, isLoadingAuth } = useAppContext();
+  const { lang, setLang, isAr, role, setRole, isLoadingAuth, headerTitle } = useAppContext();
   const t = translations[lang];
   const [showSplash, setShowSplash] = useState(true);
   const [showSuperAdmin, setShowSuperAdmin] = useState(false);
@@ -41,7 +41,7 @@ function MainLayout() {
       {/* Global Header */}
       <header className="bg-white/80 backdrop-blur-md border-b border-slate-200 px-6 py-4 flex justify-between items-center sticky top-0 z-40">
         <h1 className={`text-2xl font-bold tracking-tight ${isAr ? 'font-arabic' : ''}`}>
-          SALONERA
+          {headerTitle || 'SALONERA'}
         </h1>
         
         <div className="flex items-center gap-3">

@@ -392,7 +392,7 @@ export function Dashboards() {
       whatsapp: salonSettingsData.whatsapp,
       working_hours_start: salonSettingsData.working_hours_start,
       working_hours_end: salonSettingsData.working_hours_end,
-      salon_type: salonSettingsData.salon_type,
+      type: salonSettingsData.salon_type,
       images: salonSettingsData.images,
       social_media: {
         instagram: salonSettingsData.instagram,
@@ -404,6 +404,9 @@ export function Dashboards() {
     setIsSavingSettings(false);
     if (!error) {
       alert(isAr ? 'تم الحفظ بنجاح' : 'Saved successfully');
+    } else {
+      console.error("Save error:", error);
+      alert((isAr ? 'حدث خطأ أثناء الحفظ: ' : 'Error saving: ') + error.message);
     }
   };
 

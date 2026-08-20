@@ -1,20 +1,18 @@
 const fs = require('fs');
 let content = fs.readFileSync('src/screens/Dashboards.tsx', 'utf8');
 
-content = content.replace(
-  "salon_type: salonSettingsData.salon_type,",
-  "type: salonSettingsData.salon_type,"
-);
-
-content = content.replace(
-  /if \(!error\) \{\n\s*alert\(isAr \? 'تم الحفظ بنجاح' : 'Saved successfully'\);\n\s*\}/,
-  `if (!error) {
+const oldStr = `    if (!error) {
       alert(isAr ? 'تم الحفظ بنجاح' : 'Saved successfully');
-    } else {
-      console.error("Save error:", error);
-      alert((isAr ? 'حدث خطأ أثناء الحفظ: ' : 'Error saving: ') + error.message);
-    }`
-);
+      fetchSalonAndBookings();
+    } else {`;
+
+const newStr = `    if (!error) {
+      alert(isAr ? 'تم الحفظ بنجاح' : 'Saved successfully');
+      fetchSalonAndBookings();
+      setActiveTab('dashboard');
+    } else {`;
+
+content = content.replace(oldStr, newStr);
 
 fs.writeFileSync('src/screens/Dashboards.tsx', content);
-console.log("Fixed salon_type issue and added error reporting");
+console.log("Updated handleSaveSettings to set active tab to dashboard");

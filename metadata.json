@@ -1,0 +1,10 @@
+{
+  "name": "Salonera",
+  "description": "A multi-tenant SaaS platform aggregating beauty salons with booking management, staff roles, and multilingual support.",
+  "requestFramePermissions": [
+    "geolocation"
+  ],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}

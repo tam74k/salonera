@@ -1,0 +1,26 @@
+@import url('https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;500;600;700;800&display=swap');
+@import "tailwindcss";
+
+@theme {
+  --font-sans: 'Cairo', ui-sans-serif, system-ui, sans-serif;
+}
+
+@layer base {
+  html, body {
+    font-family: 'Cairo', sans-serif;
+  }
+}
+
+.PhoneInputInput {
+  background-color: transparent !important;
+  border: none !important;
+  outline: none !important;
+  box-shadow: none !important;
+  flex: 1;
+  min-width: 0;
+  padding-left: 0.5rem;
+}
+.PhoneInputInput:focus {
+  outline: none !important;
+  box-shadow: none !important;
+}

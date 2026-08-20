@@ -6,12 +6,23 @@ import { AuthFlow } from './screens/Auth';
 import { ClientApp } from './screens/ClientApp';
 import { Dashboards } from './screens/Dashboards';
 import { SuperAdminSettings } from './screens/SuperAdmin';
-import { Globe, LogOut, Loader2, Settings } from 'lucide-react';
+import { Globe, LogOut, Loader2, Settings, User as UserIcon } from 'lucide-react';
 import { translations } from './i18n';
 import { supabase } from './lib/supabase';
 
 function MainLayout() {
-  const { lang, setLang, isAr, role, setRole, isLoadingAuth, headerTitle } = useAppContext();
+  const { lang, setLang, isAr, role, setRole, isLoadingAuth, headerTitle, profile } = useAppContext();
+
+  const getRoleName = (r: string, isAr: boolean) => {
+    switch (r) {
+      case 'client': return isAr ? 'عميل' : 'Client';
+      case 'admin': return isAr ? 'إدارة الصالون' : 'Admin';
+      case 'artist': return isAr ? 'فني' : 'Artist';
+      case 'cashier': return isAr ? 'كاشير' : 'Cashier';
+      case 'super_admin': return isAr ? 'مدير النظام' : 'Super Admin';
+      default: return '';
+    }
+  };
   const t = translations[lang];
   const [showSplash, setShowSplash] = useState(true);
   const [showSuperAdmin, setShowSuperAdmin] = useState(false);
@@ -30,14 +41,14 @@ function MainLayout() {
 
   if (isLoadingAuth) {
     return (
-      <div className="min-h-screen bg-slate-50 flex items-center justify-center">
+      <div className="min-h-screen bg-[#FAFAFA] flex items-center justify-center">
         <Loader2 className="w-8 h-8 text-indigo-600 animate-spin" />
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-slate-50 font-sans flex flex-col text-slate-900">
+    <div className="min-h-screen bg-[#FAFAFA] font-sans flex flex-col text-slate-900">
       {/* Global Header */}
       <header className="bg-white/80 backdrop-blur-md border-b border-slate-200 px-6 py-4 flex justify-between items-center sticky top-0 z-40">
         <h1 className={`text-2xl font-bold tracking-tight ${isAr ? 'font-arabic' : ''}`}>

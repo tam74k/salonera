@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { useAppContext } from '../store';
 import { translations } from '../i18n';
-import { CheckCircle2, Image as ImageIcon, Clock, PlusCircle, Settings, Users, Calendar, LayoutDashboard, MessageSquare, Scissors, XCircle, Loader2 } from 'lucide-react';
+import { X, CheckCircle2, Image as ImageIcon, Clock, PlusCircle, Settings, Users, Calendar, LayoutDashboard, MessageSquare, Scissors, XCircle, Loader2 } from 'lucide-react';
 import { AdminInput } from '../components/AdminInput';
 import { Scanner } from '@yudiel/react-qr-scanner';
 import { sendWhatsAppMessage } from '../lib/whatsapp';
@@ -370,6 +370,10 @@ export function Dashboards() {
           message = isAr 
             ? `مرحباً ${clientName}،\nنعتذر منك، تم إلغاء حجزك رقم ${bookingId}.`
             : `Hello ${clientName},\nWe're sorry, your booking #${bookingId} has been canceled.`;
+        } else if (status === 'completed') {
+          message = isAr
+            ? `مرحباً ${clientName}،\nلقد تم تأكيد وصولك للصالون.\nنتمنى لك تجربة رائعة معنا!`
+            : `Hello ${clientName},\nYour arrival has been confirmed.\nWe hope you have a great experience with us!`;
         }
 
         if (message) {
@@ -393,39 +397,39 @@ export function Dashboards() {
   if (role === 'artist') {
     return (
       <div className="max-w-5xl mx-auto p-4 md:p-8 space-y-8 pb-24">
-        <div className="bg-gradient-to-br from-indigo-900 to-indigo-800 text-white p-8 md:p-12 rounded-[2rem] relative overflow-hidden shadow-2xl shadow-indigo-900/20">
+        <div className="bg-gradient-to-br from-zinc-900 to-zinc-800 text-white p-8 md:p-12 rounded-[2rem] relative overflow-hidden shadow-2xl shadow-zinc-900/20">
           <div className="absolute right-0 top-0 opacity-10">
             <Scissors className="w-64 h-64 -mr-12 -mt-12 text-white" />
           </div>
           
           <h2 className="text-3xl md:text-4xl font-bold relative z-10 mb-2">{t.welcome_artist}</h2>
-          <p className="text-indigo-200 relative z-10 font-medium">
+          <p className="text-zinc-300 relative z-10 font-medium">
             {isAr ? 'مرحباً بك في لوحة تحكم الفني' : 'Welcome to the Artist Dashboard'}
           </p>
         </div>
 
         {loading ? (
           <div className="flex justify-center p-12">
-            <Loader2 className="w-8 h-8 animate-spin text-indigo-600" />
+            <Loader2 className="w-8 h-8 animate-spin text-zinc-900" />
           </div>
         ) : (
           <div className="space-y-6">
-            <div className="flex flex-wrap gap-2 bg-slate-100 p-1.5 rounded-2xl w-fit">
+            <div className="flex flex-wrap gap-2 bg-slate-100 p-1.5 rounded-[16px] w-fit">
               <button 
                 onClick={() => setArtistTab('today')}
-                className={`px-6 py-2.5 rounded-xl font-bold text-sm transition-all ${artistTab === 'today' ? 'bg-white text-indigo-700 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
+                className={`px-6 py-2.5 rounded-xl font-bold text-sm transition-all ${artistTab === 'today' ? 'bg-white text-zinc-900 shadow-sm' : 'text-zinc-500 hover:text-zinc-700'}`}
               >
                 {isAr ? 'حجوزات اليوم' : 'Today Bookings'}
               </button>
               <button 
                 onClick={() => setArtistTab('upcoming')}
-                className={`px-6 py-2.5 rounded-xl font-bold text-sm transition-all ${artistTab === 'upcoming' ? 'bg-white text-indigo-700 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
+                className={`px-6 py-2.5 rounded-xl font-bold text-sm transition-all ${artistTab === 'upcoming' ? 'bg-white text-zinc-900 shadow-sm' : 'text-zinc-500 hover:text-zinc-700'}`}
               >
                 {isAr ? 'حجوزات قادمة' : 'Upcoming Bookings'}
               </button>
               <button 
                 onClick={() => setArtistTab('past')}
-                className={`px-6 py-2.5 rounded-xl font-bold text-sm transition-all ${artistTab === 'past' ? 'bg-white text-indigo-700 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
+                className={`px-6 py-2.5 rounded-xl font-bold text-sm transition-all ${artistTab === 'past' ? 'bg-white text-zinc-900 shadow-sm' : 'text-zinc-500 hover:text-zinc-700'}`}
               >
                 {isAr ? 'حجوزات سابقة' : 'Past Bookings'}
               </button>
@@ -450,7 +454,7 @@ export function Dashboards() {
 
                 if (filtered.length === 0) {
                    return (
-                      <div className="p-12 text-center text-slate-500 bg-white rounded-3xl border border-slate-100">
+                      <div className="p-12 text-center text-zinc-500 bg-white rounded-[24px] border border-zinc-100">
                         {isAr ? 'لا يوجد مواعيد في هذا القسم' : 'No bookings in this section'}
                       </div>
                    );
@@ -462,20 +466,21 @@ export function Dashboards() {
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: i * 0.1 }}
-                    className="bg-white p-5 md:p-6 rounded-3xl border border-slate-100 shadow-sm hover:shadow-md transition-all flex flex-col md:flex-row md:items-center justify-between gap-4 group"
+                    className="bg-white p-5 md:p-6 rounded-[24px] border border-zinc-100 shadow-sm hover:shadow-md transition-all flex flex-col md:flex-row md:items-center justify-between gap-4 group cursor-pointer"
+                    onClick={() => { setSelectedBookingForEdit(b); setShowBookingEditModal(true); }}
                   >
                     <div>
                       <div className="flex items-center gap-3 mb-2">
-                        <span className="text-sm font-bold text-indigo-700 bg-indigo-50 px-3 py-1 rounded-lg">{b.booking_time}</span>
-                        <span className="text-sm font-medium text-slate-400">{b.booking_date}</span>
+                        <span className="text-sm font-bold text-zinc-900 bg-zinc-100 px-3 py-1 rounded-lg">{b.booking_time}</span>
+                        <span className="text-sm font-medium text-zinc-400">{b.booking_date}</span>
                         <StatusBadge status={b.status} isAr={isAr} />
                       </div>
-                      <h4 className="text-lg font-bold text-slate-900">
+                      <h4 className="text-lg font-bold text-zinc-900">
                         {isAr ? (b.client?.first_name_ar || b.client?.first_name_en) : (b.client?.first_name_en || b.client?.first_name_ar) || 'Client'}
                       </h4>
-                      <p className="text-slate-500 text-sm mt-1 flex flex-wrap gap-1">
+                      <p className="text-zinc-500 text-sm mt-1 flex flex-wrap gap-1">
                         {b.details?.map((d: any, idx: number) => (
-                          <span key={idx} className="bg-slate-100 px-2 py-1 rounded-md text-slate-600 font-medium text-xs">
+                          <span key={idx} className="bg-slate-100 px-2 py-1 rounded-md text-zinc-600 font-medium text-xs">
                              {isAr ? d.services?.name_ar : d.services?.name_en}
                           </span>
                         ))}
@@ -484,13 +489,13 @@ export function Dashboards() {
                     
                     <div className="flex items-center gap-3 mt-2 md:mt-0">
                       {artistTab === 'today' && b.status === 'confirmed' && (
-                        <button onClick={() => updateBookingStatus(b.id, 'completed', true)} className="w-full md:w-auto px-6 py-3 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-sm font-semibold transition-colors flex items-center justify-center gap-2 shadow-sm shadow-emerald-600/20">
+                        <button onClick={(e) => { e.stopPropagation(); updateBookingStatus(b.id, 'completed', true); }} className="w-full md:w-auto px-6 py-3 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-sm font-semibold transition-colors flex items-center justify-center gap-2 shadow-sm shadow-emerald-600/20">
                           <CheckCircle2 className="w-4 h-4" />
                           {isAr ? 'تأكيد وصول العميل (مكتمل)' : 'Mark Arrived (Completed)'}
                         </button>
                       )}
                       {artistTab === 'today' && b.status === 'pending' && (
-                        <span className="text-sm font-medium text-slate-500 bg-slate-50 px-4 py-2 rounded-xl border border-slate-200">
+                        <span className="text-sm font-medium text-zinc-500 bg-zinc-50 px-4 py-2 rounded-xl border border-zinc-200">
                           {isAr ? 'بانتظار الإدارة' : 'Awaiting Admin'}
                         </span>
                       )}
@@ -510,9 +515,9 @@ export function Dashboards() {
     <div className="max-w-7xl mx-auto p-4 md:p-8 flex flex-col md:flex-row gap-8 pb-24">
       {/* Sidebar */}
       <aside className="w-full md:w-64 shrink-0 space-y-2">
-        <div className="p-4 bg-slate-900 text-white rounded-2xl mb-6">
+        <div className="p-4 bg-zinc-900 text-white rounded-[16px] mb-6">
           <h3 className="font-bold">{isAr ? 'الإدارة' : 'Admin'}</h3>
-          <p className="text-xs text-slate-400">{salonData ? (isAr ? salonData.name_ar : salonData.name_en) : '...'}</p>
+          <p className="text-xs text-zinc-400">{salonData ? (isAr ? salonData.name_ar : salonData.name_en) : '...'}</p>
         </div>
         
         <NavButton icon={LayoutDashboard} label={t.dashboard} active={activeTab === 'dashboard'} onClick={() => setActiveTab('dashboard')} />
@@ -526,7 +531,7 @@ export function Dashboards() {
       <main className="flex-1 space-y-8">
         {loading ? (
           <div className="flex justify-center p-12">
-            <Loader2 className="w-8 h-8 animate-spin text-indigo-600" />
+            <Loader2 className="w-8 h-8 animate-spin text-zinc-900" />
           </div>
         ) : (
           <>
@@ -538,7 +543,7 @@ export function Dashboards() {
                   <StatCard title={isAr ? 'الحجوزات المكتملة' : 'Completed'} value={bookings.filter(b => b.status === 'completed').length.toString()} />
                 </section>
                 
-                <section className="bg-white p-6 md:p-8 rounded-3xl shadow-sm border border-slate-100">
+                <section className="bg-white p-6 md:p-8 rounded-[24px] shadow-sm border border-zinc-100">
                   
 {(() => {
     const todayStr = new Date().toISOString().split('T')[0];
@@ -572,20 +577,20 @@ export function Dashboards() {
     return (
       <>
         <div className="flex flex-col md:flex-row items-start md:items-center justify-between mb-6 gap-4">
-          <h3 className="text-xl font-bold text-slate-900 flex items-center gap-2">
-            <Calendar className="w-5 h-5 text-indigo-500" />
+          <h3 className="text-xl font-bold text-zinc-900 flex items-center gap-2">
+            <Calendar className="w-5 h-5 text-zinc-500" />
             {isAr ? 'قائمة الحجوزات' : 'Bookings List'}
           </h3>
           <div className="flex bg-slate-100 p-1 rounded-xl">
             <button 
               onClick={() => { setBookingViewTab('active'); setSearchQuery(''); }}
-              className={`px-6 py-2 rounded-lg text-sm font-bold transition-all ${bookingViewTab === 'active' ? 'bg-white text-indigo-700 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
+              className={`px-6 py-2 rounded-lg text-sm font-bold transition-all ${bookingViewTab === 'active' ? 'bg-white text-zinc-900 shadow-sm' : 'text-zinc-500 hover:text-zinc-700'}`}
             >
               {isAr ? 'النشطة (اليوم)' : 'Active (Today)'}
             </button>
             <button 
               onClick={() => { setBookingViewTab('archive'); setSearchQuery(''); }}
-              className={`px-6 py-2 rounded-lg text-sm font-bold transition-all ${bookingViewTab === 'archive' ? 'bg-white text-indigo-700 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
+              className={`px-6 py-2 rounded-lg text-sm font-bold transition-all ${bookingViewTab === 'archive' ? 'bg-white text-zinc-900 shadow-sm' : 'text-zinc-500 hover:text-zinc-700'}`}
             >
               {isAr ? 'الأرشيف' : 'Archive'}
             </button>
@@ -598,14 +603,14 @@ export function Dashboards() {
             placeholder={isAr ? 'بحث بالاسم، الجوال، كود الحجز' : 'Search by name, mobile, code'}
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="md:col-span-2 bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 outline-none focus:ring-2 focus:ring-indigo-500"
+            className="md:col-span-2 bg-zinc-50 border border-zinc-200 rounded-xl px-4 py-2.5 outline-none focus:ring-2 focus:ring-indigo-500"
           />
           <input 
             type="date" 
-            className="bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 outline-none focus:ring-2 focus:ring-indigo-500"
+            className="bg-zinc-50 border border-zinc-200 rounded-xl px-4 py-2.5 outline-none focus:ring-2 focus:ring-indigo-500"
             onChange={(e) => setSearchQuery(e.target.value)}
           />
-          <button className="flex items-center justify-center gap-2 bg-indigo-50 text-indigo-600 px-4 py-2.5 rounded-xl font-bold hover:bg-indigo-100 transition-colors" onClick={() => {
+          <button className="flex items-center justify-center gap-2 bg-zinc-100 text-zinc-900 px-4 py-2.5 rounded-xl font-bold hover:bg-indigo-100 transition-colors" onClick={() => {
               const code = prompt(isAr ? 'أدخل كود الحجز من الـ QR' : 'Enter QR Booking Code');
               if(code) setSearchQuery(code);
           }}>
@@ -616,27 +621,30 @@ export function Dashboards() {
 
         <div className="space-y-4">
           {processedBookings.length === 0 ? (
-            <p className="text-slate-500 text-center py-8">{bookingViewTab === 'active' ? (isAr ? 'لا يوجد حجوزات نشطة اليوم' : 'No active bookings today') : (isAr ? 'لا يوجد حجوزات في الأرشيف' : 'No bookings in archive')}</p>
+            <p className="text-zinc-500 text-center py-8">{bookingViewTab === 'active' ? (isAr ? 'لا يوجد حجوزات نشطة اليوم' : 'No active bookings today') : (isAr ? 'لا يوجد حجوزات في الأرشيف' : 'No bookings in archive')}</p>
           ) : processedBookings.map((b, i) => (
-            <div key={b.id} className="p-4 md:p-6 border border-slate-100 rounded-2xl bg-slate-50 flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+            <div key={b.id} 
+              className="p-4 md:p-6 border border-zinc-100 rounded-[16px] bg-white shadow-sm hover:shadow-md cursor-pointer transition-all flex flex-col md:flex-row items-start md:items-center justify-between gap-4"
+              onClick={() => { setSelectedBookingForEdit(b); setShowBookingEditModal(true); }}
+            >
               <div className="flex items-center gap-4">
-                <div className="w-12 h-12 bg-indigo-100 text-indigo-700 rounded-xl flex items-center justify-center font-bold text-lg shrink-0">
+                <div className="w-12 h-12 bg-indigo-100 text-zinc-900 rounded-xl flex items-center justify-center font-bold text-lg shrink-0">
                   #{b.id.substring(0, 4)}
                 </div>
                 <div>
-                  <h4 className="font-bold text-slate-900">{isAr ? b.client?.first_name_ar : b.client?.first_name_en}</h4>
-                  <p className="text-sm text-slate-500">{b.booking_date} • {b.booking_time}</p>
-                  <p className="text-sm font-medium text-slate-600 mt-1">{isAr ? 'الموظف' : 'Staff'}: {isAr ? b.artist?.first_name_ar : b.artist?.first_name_en}</p>
+                  <h4 className="font-bold text-zinc-900">{isAr ? b.client?.first_name_ar : b.client?.first_name_en}</h4>
+                  <p className="text-sm text-zinc-500">{b.booking_date} • {b.booking_time}</p>
+                  <p className="text-sm font-medium text-zinc-600 mt-1">{isAr ? 'الموظف' : 'Staff'}: {isAr ? b.artist?.first_name_ar : b.artist?.first_name_en}</p>
                 </div>
               </div>
               <div className="flex items-center gap-3 w-full md:w-auto">
                 <select 
                   value={b.status} 
-                  onChange={(e) => updateBookingStatus(b.id, e.target.value)}
+                  onClick={(e) => e.stopPropagation()} onChange={(e) => updateBookingStatus(b.id, e.target.value)}
                   className={`px-4 py-2.5 rounded-xl font-bold text-sm border-0 outline-none w-full md:w-auto ${
                     b.status === 'pending' ? 'bg-amber-100 text-amber-700' : 
                     b.status === 'confirmed' ? 'bg-emerald-100 text-emerald-700' : 
-                    b.status === 'completed' ? 'bg-indigo-100 text-indigo-700' : 
+                    b.status === 'completed' ? 'bg-indigo-100 text-zinc-900' : 
                     'bg-rose-100 text-rose-700'
                   }`}
                 >
@@ -658,9 +666,9 @@ export function Dashboards() {
 
             
             {activeTab === 'settings' && (
-              <section className="bg-white p-6 md:p-8 rounded-3xl shadow-sm border border-slate-100">
+              <section className="bg-white p-6 md:p-8 rounded-[24px] shadow-sm border border-zinc-100">
                 <div className="mb-6">
-                  <h3 className="text-xl font-bold text-slate-900 flex items-center gap-2">
+                  <h3 className="text-xl font-bold text-zinc-900 flex items-center gap-2">
                     <MessageSquare className="w-5 h-5 text-emerald-500" />
                     {isAr ? 'إعدادات الصالون' : 'Salon Settings'}
                   </h3>
@@ -693,8 +701,8 @@ export function Dashboards() {
 
                 <div className="grid md:grid-cols-2 gap-4 mb-6">
                   <div>
-                    <label className="block text-sm font-medium text-slate-700 mb-1.5">{isAr ? 'نوع الصالون' : 'Salon Type'}</label>
-                    <select value={salonSettingsData.salon_type || 'both'} onChange={e => setSalonSettingsData({...salonSettingsData, salon_type: e.target.value})} className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 outline-none font-medium">
+                    <label className="block text-sm font-medium text-zinc-700 mb-1.5">{isAr ? 'نوع الصالون' : 'Salon Type'}</label>
+                    <select value={salonSettingsData.salon_type || 'both'} onChange={e => setSalonSettingsData({...salonSettingsData, salon_type: e.target.value})} className="w-full bg-zinc-50 border border-zinc-200 rounded-xl px-4 py-2.5 outline-none font-medium">
                       <option value="both">{isAr ? 'رجالي ونسائي (Both)' : 'Both'}</option>
                       <option value="men">{isAr ? 'رجالي (Men)' : 'Men'}</option>
                       <option value="women">{isAr ? 'نسائي (Women)' : 'Women'}</option>
@@ -704,32 +712,32 @@ export function Dashboards() {
 
                 <div className="grid md:grid-cols-3 gap-4 mb-6">
                   <div>
-                    <label className="block text-sm font-medium text-slate-700 mb-1.5">{isAr ? 'رقم الجوال' : 'Mobile'}</label>
-                    <input type="tel" value={salonSettingsData.mobile} onChange={e => setSalonSettingsData({...salonSettingsData, mobile: e.target.value})} className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 outline-none" dir="ltr" />
+                    <label className="block text-sm font-medium text-zinc-700 mb-1.5">{isAr ? 'رقم الجوال' : 'Mobile'}</label>
+                    <input type="tel" value={salonSettingsData.mobile} onChange={e => setSalonSettingsData({...salonSettingsData, mobile: e.target.value})} className="w-full bg-zinc-50 border border-zinc-200 rounded-xl px-4 py-2.5 outline-none" dir="ltr" />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-slate-700 mb-1.5">{isAr ? 'البريد الإلكتروني' : 'Email'}</label>
-                    <input type="email" value={salonSettingsData.email} onChange={e => setSalonSettingsData({...salonSettingsData, email: e.target.value})} className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 outline-none" dir="ltr" />
+                    <label className="block text-sm font-medium text-zinc-700 mb-1.5">{isAr ? 'البريد الإلكتروني' : 'Email'}</label>
+                    <input type="email" value={salonSettingsData.email} onChange={e => setSalonSettingsData({...salonSettingsData, email: e.target.value})} className="w-full bg-zinc-50 border border-zinc-200 rounded-xl px-4 py-2.5 outline-none" dir="ltr" />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-slate-700 mb-1.5">{isAr ? 'رقم الواتساب' : 'WhatsApp'}</label>
-                    <input type="tel" value={salonSettingsData.whatsapp} onChange={e => setSalonSettingsData({...salonSettingsData, whatsapp: e.target.value})} className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 outline-none" dir="ltr" />
+                    <label className="block text-sm font-medium text-zinc-700 mb-1.5">{isAr ? 'رقم الواتساب' : 'WhatsApp'}</label>
+                    <input type="tel" value={salonSettingsData.whatsapp} onChange={e => setSalonSettingsData({...salonSettingsData, whatsapp: e.target.value})} className="w-full bg-zinc-50 border border-zinc-200 rounded-xl px-4 py-2.5 outline-none" dir="ltr" />
                   </div>
                 </div>
 
                 <div className="grid md:grid-cols-2 gap-4 mb-6">
                   <div>
-                    <label className="block text-sm font-medium text-slate-700 mb-1.5">{isAr ? 'بداية الدوام' : 'Working Hours Start'}</label>
-                    <input type="time" value={salonSettingsData.working_hours_start} onChange={e => setSalonSettingsData({...salonSettingsData, working_hours_start: e.target.value})} className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 outline-none" />
+                    <label className="block text-sm font-medium text-zinc-700 mb-1.5">{isAr ? 'بداية الدوام' : 'Working Hours Start'}</label>
+                    <input type="time" value={salonSettingsData.working_hours_start} onChange={e => setSalonSettingsData({...salonSettingsData, working_hours_start: e.target.value})} className="w-full bg-zinc-50 border border-zinc-200 rounded-xl px-4 py-2.5 outline-none" />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-slate-700 mb-1.5">{isAr ? 'نهاية الدوام' : 'Working Hours End'}</label>
-                    <input type="time" value={salonSettingsData.working_hours_end} onChange={e => setSalonSettingsData({...salonSettingsData, working_hours_end: e.target.value})} className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 outline-none" />
+                    <label className="block text-sm font-medium text-zinc-700 mb-1.5">{isAr ? 'نهاية الدوام' : 'Working Hours End'}</label>
+                    <input type="time" value={salonSettingsData.working_hours_end} onChange={e => setSalonSettingsData({...salonSettingsData, working_hours_end: e.target.value})} className="w-full bg-zinc-50 border border-zinc-200 rounded-xl px-4 py-2.5 outline-none" />
                   </div>
                 </div>
 
                 <div className="mt-8 mb-6">
-                  <h3 className="text-xl font-bold text-slate-900 flex items-center gap-2">
+                  <h3 className="text-xl font-bold text-zinc-900 flex items-center gap-2">
                     {isAr ? 'صور الصالون' : 'Salon Images'} (Max 3)
                   </h3>
                 </div>
@@ -738,7 +746,7 @@ export function Dashboards() {
                     <div key={i} className="flex flex-col gap-2">
                       {salonSettingsData.images?.[i] ? (
                         <div className="relative group">
-                          <img src={salonSettingsData.images[i]} alt="" className="w-full h-32 object-cover rounded-xl border border-slate-200" />
+                          <img src={salonSettingsData.images[i]} alt="" className="w-full h-32 object-cover rounded-xl border border-zinc-200" />
                           <button 
                             onClick={() => {
                                const newImages = [...salonSettingsData.images];
@@ -751,7 +759,7 @@ export function Dashboards() {
                           </button>
                         </div>
                       ) : (
-                        <div className="w-full h-32 bg-slate-50 rounded-xl border border-dashed border-slate-300 flex items-center justify-center text-slate-400 flex-col">
+                        <div className="w-full h-32 bg-zinc-50 rounded-xl border border-dashed border-slate-300 flex items-center justify-center text-zinc-400 flex-col">
                           <ImageIcon className="w-6 h-6 mb-2" />
                           <span className="text-xs">{isAr ? 'اضغط لرفع صورة' : 'Click to upload'}</span>
                           <input 
@@ -777,63 +785,63 @@ export function Dashboards() {
                 </div>
 
                 <div className="mt-8 mb-6">
-                  <h3 className="text-xl font-bold text-slate-900 flex items-center gap-2">
+                  <h3 className="text-xl font-bold text-zinc-900 flex items-center gap-2">
                     {t.whatsapp_api_settings} (Evolution API)
                   </h3>
                 </div>
                 
                 <div className="grid md:grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-sm font-medium text-slate-700 mb-1.5">Instance Name</label>
-                    <input type="text" value={evoInstance} onChange={(e) => setEvoInstance(e.target.value)} className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 outline-none" dir="ltr" />
+                    <label className="block text-sm font-medium text-zinc-700 mb-1.5">Instance Name</label>
+                    <input type="text" value={evoInstance} onChange={(e) => setEvoInstance(e.target.value)} className="w-full bg-zinc-50 border border-zinc-200 rounded-xl px-4 py-2.5 outline-none" dir="ltr" />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-slate-700 mb-1.5">API Key</label>
-                    <input type="password" value={evoApiKey} onChange={(e) => setEvoApiKey(e.target.value)} className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 outline-none" dir="ltr" />
+                    <label className="block text-sm font-medium text-zinc-700 mb-1.5">API Key</label>
+                    <input type="password" value={evoApiKey} onChange={(e) => setEvoApiKey(e.target.value)} className="w-full bg-zinc-50 border border-zinc-200 rounded-xl px-4 py-2.5 outline-none" dir="ltr" />
                   </div>
                 </div>
 
                 <div className="mt-8 mb-6">
-                  <h3 className="text-xl font-bold text-slate-900">{isAr ? 'الموقع الجغرافي (GPS)' : 'Location (GPS)'}</h3>
+                  <h3 className="text-xl font-bold text-zinc-900">{isAr ? 'الموقع الجغرافي (GPS)' : 'Location (GPS)'}</h3>
                 </div>
                 
                 <div className="grid md:grid-cols-3 gap-4">
                   <div>
-                    <label className="block text-sm font-medium text-slate-700 mb-1.5">{isAr ? 'الدولة' : 'Country'}</label>
-                    <select value={salonCountry} onChange={(e) => { setSalonCountry(e.target.value); setSalonGov(''); setSalonCity(''); }} className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 outline-none font-medium">
+                    <label className="block text-sm font-medium text-zinc-700 mb-1.5">{isAr ? 'الدولة' : 'Country'}</label>
+                    <select value={salonCountry} onChange={(e) => { setSalonCountry(e.target.value); setSalonGov(''); setSalonCity(''); }} className="w-full bg-zinc-50 border border-zinc-200 rounded-xl px-4 py-3 outline-none font-medium">
                       <option value="">{isAr ? 'اختر الدولة' : 'Select Country'}</option>
                       {countriesList.map(c => <option key={c.id} value={c.id}>{isAr ? c.name_ar : c.name_en}</option>)}
                     </select>
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-slate-700 mb-1.5">{isAr ? 'المحافظة / المنطقة' : 'Governorate / Region'}</label>
-                    <select value={salonGov} onChange={(e) => { setSalonGov(e.target.value); setSalonCity(''); }} disabled={!salonCountry} className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 outline-none font-medium disabled:opacity-50">
+                    <label className="block text-sm font-medium text-zinc-700 mb-1.5">{isAr ? 'المحافظة / المنطقة' : 'Governorate / Region'}</label>
+                    <select value={salonGov} onChange={(e) => { setSalonGov(e.target.value); setSalonCity(''); }} disabled={!salonCountry} className="w-full bg-zinc-50 border border-zinc-200 rounded-xl px-4 py-3 outline-none font-medium disabled:opacity-50">
                       <option value="">{isAr ? 'اختر المحافظة' : 'Select Governorate'}</option>
                       {governoratesList.filter(g => g.country_id.toString() === salonCountry.toString()).map(g => <option key={g.id} value={g.id}>{isAr ? g.name_ar : g.name_en}</option>)}
                     </select>
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-slate-700 mb-1.5">{isAr ? 'المدينة' : 'City'}</label>
-                    <select value={salonCity} onChange={(e) => setSalonCity(e.target.value)} disabled={!salonGov} className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 outline-none font-medium disabled:opacity-50">
+                    <label className="block text-sm font-medium text-zinc-700 mb-1.5">{isAr ? 'المدينة' : 'City'}</label>
+                    <select value={salonCity} onChange={(e) => setSalonCity(e.target.value)} disabled={!salonGov} className="w-full bg-zinc-50 border border-zinc-200 rounded-xl px-4 py-3 outline-none font-medium disabled:opacity-50">
                       <option value="">{isAr ? 'اختر المدينة' : 'Select City'}</option>
                       {citiesList.filter(ci => ci.governorate_id.toString() === salonGov.toString()).map(city => <option key={city.id} value={city.id}>{isAr ? city.name_ar : city.name_en}</option>)}
                     </select>
                   </div>
                 </div>
 
-                <div className="mt-4 p-4 bg-slate-50 border border-slate-200 rounded-xl flex items-center justify-between">
+                <div className="mt-4 p-4 bg-zinc-50 border border-zinc-200 rounded-xl flex items-center justify-between">
                   <div>
-                    <p className="font-medium text-slate-900">{isAr ? 'إحداثيات الموقع (GPS)' : 'GPS Coordinates'}</p>
-                    <p className="text-sm text-slate-500">
+                    <p className="font-medium text-zinc-900">{isAr ? 'إحداثيات الموقع (GPS)' : 'GPS Coordinates'}</p>
+                    <p className="text-sm text-zinc-500">
                       {salonLat && salonLng ? `${salonLat.toFixed(4)}, ${salonLng.toFixed(4)}` : (isAr ? 'لم يتم تحديد الموقع بعد' : 'Location not set yet')}
                     </p>
                   </div>
-                  <button onClick={handleCaptureLocation} className="px-4 py-2 bg-indigo-100 text-indigo-700 rounded-lg text-sm font-bold hover:bg-indigo-200 transition-colors">
+                  <button onClick={handleCaptureLocation} className="px-4 py-2 bg-indigo-100 text-zinc-900 rounded-lg text-sm font-bold hover:bg-indigo-200 transition-colors">
                     {isAr ? 'تحديث الموقع الحالي' : 'Update to Current Location'}
                   </button>
                 </div>
                 
-                <button onClick={handleSaveSettings} disabled={isSavingSettings} className="mt-6 w-full md:w-auto bg-slate-900 text-white px-8 py-3 rounded-xl text-sm font-bold hover:bg-slate-800 transition-colors disabled:bg-slate-600">
+                <button onClick={handleSaveSettings} disabled={isSavingSettings} className="mt-6 w-full md:w-auto bg-zinc-900 text-white px-8 py-3 rounded-xl text-sm font-bold hover:bg-slate-800 transition-colors disabled:bg-slate-600">
                   {isSavingSettings ? (isAr ? 'جاري الحفظ...' : 'Saving...') : (isAr ? 'حفظ الإعدادات' : 'Save Settings')}
                 </button>
               </section>
@@ -842,15 +850,15 @@ export function Dashboards() {
 
             {activeTab === 'services' && (
 
-              <section className="bg-white p-6 md:p-8 rounded-3xl shadow-sm border border-slate-100">
+              <section className="bg-white p-6 md:p-8 rounded-[24px] shadow-sm border border-zinc-100">
                 <div className="flex justify-between items-center mb-6">
-                  <h3 className="text-xl font-bold text-slate-900 flex items-center gap-2">
-                    <Scissors className="w-5 h-5 text-indigo-500" />
+                  <h3 className="text-xl font-bold text-zinc-900 flex items-center gap-2">
+                    <Scissors className="w-5 h-5 text-zinc-500" />
                     {t.services_management}
                   </h3>
                   <button 
                     onClick={() => setShowAddService(!showAddService)}
-                    className="flex items-center gap-2 px-4 py-2 bg-indigo-50 text-indigo-700 rounded-xl font-semibold text-sm hover:bg-indigo-100 transition-colors"
+                    className="flex items-center gap-2 px-4 py-2 bg-zinc-100 text-zinc-900 rounded-xl font-semibold text-sm hover:bg-indigo-100 transition-colors"
                   >
                     {showAddService ? <XCircle className="w-4 h-4" /> : <PlusCircle className="w-4 h-4" />}
                     {isAr ? 'إضافة خدمة' : 'Add Service'}
@@ -858,7 +866,7 @@ export function Dashboards() {
                 </div>
 
                 {showAddService && (
-                  <div className="mb-8 p-6 bg-slate-50 border border-slate-200 rounded-[2rem]">
+                  <div className="mb-8 p-6 bg-zinc-50 border border-zinc-200 rounded-[2rem]">
                     <AdminInput 
                       labelAr="اسم الخدمة (عربي)"
                       labelEn="Service Name (English)"
@@ -869,22 +877,22 @@ export function Dashboards() {
                     />
                     <div className="grid md:grid-cols-3 gap-4 mt-4">
                       <div>
-                        <label className="block text-sm font-medium text-slate-700 mb-1.5">{t.original_price}</label>
-                        <input type="number" value={srvPrice} onChange={(e) => setSrvPrice(e.target.value)} className="w-full bg-white border border-slate-200 rounded-xl px-4 py-2.5 focus:ring-2 focus:ring-indigo-500 outline-none transition-all" />
+                        <label className="block text-sm font-medium text-zinc-700 mb-1.5">{t.original_price}</label>
+                        <input type="number" value={srvPrice} onChange={(e) => setSrvPrice(e.target.value)} className="w-full bg-white border border-zinc-200 rounded-xl px-4 py-2.5 focus:ring-2 focus:ring-indigo-500 outline-none transition-all" />
                       </div>
                       <div>
-                        <label className="block text-sm font-medium text-slate-700 mb-1.5">{isAr ? 'السعر (بعد الخصم اختياري)' : 'Discount Price (Optional)'}</label>
-                        <input type="number" value={srvDiscountPrice} onChange={(e) => setSrvDiscountPrice(e.target.value)} className="w-full bg-white border border-slate-200 rounded-xl px-4 py-2.5 focus:ring-2 focus:ring-indigo-500 outline-none transition-all" />
+                        <label className="block text-sm font-medium text-zinc-700 mb-1.5">{isAr ? 'السعر (بعد الخصم اختياري)' : 'Discount Price (Optional)'}</label>
+                        <input type="number" value={srvDiscountPrice} onChange={(e) => setSrvDiscountPrice(e.target.value)} className="w-full bg-white border border-zinc-200 rounded-xl px-4 py-2.5 focus:ring-2 focus:ring-indigo-500 outline-none transition-all" />
                       </div>
                       <div>
-                        <label className="block text-sm font-medium text-slate-700 mb-1.5">{t.duration} (Minutes)</label>
-                        <input type="number" value={srvDuration} onChange={(e) => setSrvDuration(e.target.value)} className="w-full bg-white border border-slate-200 rounded-xl px-4 py-2.5 focus:ring-2 focus:ring-indigo-500 outline-none transition-all" />
+                        <label className="block text-sm font-medium text-zinc-700 mb-1.5">{t.duration} (Minutes)</label>
+                        <input type="number" value={srvDuration} onChange={(e) => setSrvDuration(e.target.value)} className="w-full bg-white border border-zinc-200 rounded-xl px-4 py-2.5 focus:ring-2 focus:ring-indigo-500 outline-none transition-all" />
                       </div>
                     </div>
                     <button 
                       onClick={handleSaveService}
                       disabled={isSavingSrv}
-                      className="mt-6 bg-indigo-600 text-white px-8 py-3 rounded-xl text-sm font-bold hover:bg-indigo-700 transition-colors w-full md:w-auto disabled:bg-indigo-400"
+                      className="mt-6 bg-zinc-900 text-white px-8 py-3 rounded-xl text-sm font-bold hover:bg-zinc-800 transition-colors w-full md:w-auto disabled:bg-indigo-400"
                     >
                       {isSavingSrv ? (isAr ? 'جاري الحفظ...' : 'Saving...') : (isAr ? 'حفظ الخدمة' : 'Save Service')}
                     </button>
@@ -893,13 +901,13 @@ export function Dashboards() {
 
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                   {services.length === 0 ? (
-                    <p className="text-slate-500 col-span-full text-center py-8">{isAr ? 'لا يوجد خدمات مضافة' : 'No services added'}</p>
+                    <p className="text-zinc-500 col-span-full text-center py-8">{isAr ? 'لا يوجد خدمات مضافة' : 'No services added'}</p>
                   ) : services.map(s => (
-                    <div key={s.id} className="p-6 border border-slate-100 rounded-3xl bg-white flex flex-col justify-between shadow-sm hover:shadow-xl hover:shadow-indigo-900/5 hover:border-indigo-100 hover:-translate-y-1 transition-all">
+                    <div key={s.id} className="p-6 border border-zinc-100 rounded-[24px] bg-white flex flex-col justify-between shadow-sm hover:shadow-xl hover:shadow-indigo-900/5 hover:border-zinc-200 hover:-translate-y-1 transition-all">
                       <div>
-                        <h4 className="font-bold text-slate-900 text-lg">{isAr ? s.name_ar : s.name_en}</h4>
+                        <h4 className="font-bold text-zinc-900 text-lg">{isAr ? s.name_ar : s.name_en}</h4>
                         { (s.description_ar || s.description_en) && 
-                          <p className="text-sm text-slate-500 mt-2 line-clamp-2 leading-relaxed">{isAr ? s.description_ar : s.description_en}</p>
+                          <p className="text-sm text-zinc-500 mt-2 line-clamp-2 leading-relaxed">{isAr ? s.description_ar : s.description_en}</p>
                         }
                       </div>
                       <div className="mt-6 flex items-center justify-between pt-4 border-t border-slate-50">
@@ -907,15 +915,15 @@ export function Dashboards() {
                           <div className="flex flex-col">
                             {s.discount_price ? (
                               <>
-                                <span className="text-xs text-slate-400 line-through">SAR {s.original_price}</span>
+                                <span className="text-xs text-zinc-400 line-through">SAR {s.original_price}</span>
                                 <span className="font-black text-emerald-600 text-lg">SAR {s.discount_price}</span>
                               </>
                             ) : (
-                              <span className="font-black text-indigo-700 text-lg">SAR {s.original_price}</span>
+                              <span className="font-black text-zinc-900 text-lg">SAR {s.original_price}</span>
                             )}
                           </div>
 
-                        <span className="text-xs font-bold bg-slate-50 px-3 py-1.5 rounded-lg text-slate-600">{s.duration_minutes} {isAr ? 'دقيقة' : 'min'}</span>
+                        <span className="text-xs font-bold bg-zinc-50 px-3 py-1.5 rounded-lg text-zinc-600">{s.duration_minutes} {isAr ? 'دقيقة' : 'min'}</span>
                       </div>
                     </div>
                   ))}
@@ -924,15 +932,15 @@ export function Dashboards() {
             )}
 
             {activeTab === 'staff' && (
-              <section className="bg-white p-6 md:p-8 rounded-3xl shadow-sm border border-slate-100">
+              <section className="bg-white p-6 md:p-8 rounded-[24px] shadow-sm border border-zinc-100">
                 <div className="flex justify-between items-center mb-6">
-                  <h3 className="text-xl font-bold text-slate-900 flex items-center gap-2">
-                    <Users className="w-5 h-5 text-indigo-500" />
+                  <h3 className="text-xl font-bold text-zinc-900 flex items-center gap-2">
+                    <Users className="w-5 h-5 text-zinc-500" />
                     {t.staff_management}
                   </h3>
                   <button 
                     onClick={() => setShowAddStaff(!showAddStaff)}
-                    className="flex items-center gap-2 px-4 py-2 bg-indigo-50 text-indigo-700 rounded-xl font-semibold text-sm hover:bg-indigo-100 transition-colors"
+                    className="flex items-center gap-2 px-4 py-2 bg-zinc-100 text-zinc-900 rounded-xl font-semibold text-sm hover:bg-indigo-100 transition-colors"
                   >
                     {showAddStaff ? <XCircle className="w-4 h-4" /> : <PlusCircle className="w-4 h-4" />}
                     {isAr ? 'إضافة موظف' : 'Add Staff'}
@@ -940,7 +948,7 @@ export function Dashboards() {
                 </div>
 
                 {showAddStaff && (
-                  <div className="mb-8 p-6 bg-slate-50 border border-slate-200 rounded-[2rem]">
+                  <div className="mb-8 p-6 bg-zinc-50 border border-zinc-200 rounded-[2rem]">
                     <div className="grid md:grid-cols-1 gap-4 mb-4">
                       <AdminInput 
                           labelAr="الاسم الأول (عربي)" labelEn="First Name (English)" 
@@ -951,38 +959,38 @@ export function Dashboards() {
                     </div>
                     <div className="grid md:grid-cols-2 gap-4">
                       <div>
-                        <label className="block text-sm font-medium text-slate-700 mb-1.5">{isAr ? 'البريد الإلكتروني' : 'Email'}</label>
-                        <input type="email" value={newArtistData.email} onChange={(e) => setNewArtistData({...newArtistData, email: e.target.value})} className="w-full bg-white border border-slate-200 rounded-xl px-4 py-2.5" />
+                        <label className="block text-sm font-medium text-zinc-700 mb-1.5">{isAr ? 'البريد الإلكتروني' : 'Email'}</label>
+                        <input type="email" value={newArtistData.email} onChange={(e) => setNewArtistData({...newArtistData, email: e.target.value})} className="w-full bg-white border border-zinc-200 rounded-xl px-4 py-2.5" />
                       </div>
                       <div>
-                        <label className="block text-sm font-medium text-slate-700 mb-1.5">{isAr ? 'رقم الجوال' : 'Mobile'}</label>
-                        <input type="tel" value={newArtistData.mobile} onChange={(e) => setNewArtistData({...newArtistData, mobile: e.target.value})} className="w-full bg-white border border-slate-200 rounded-xl px-4 py-2.5" />
+                        <label className="block text-sm font-medium text-zinc-700 mb-1.5">{isAr ? 'رقم الجوال' : 'Mobile'}</label>
+                        <input type="tel" value={newArtistData.mobile} onChange={(e) => setNewArtistData({...newArtistData, mobile: e.target.value})} className="w-full bg-white border border-zinc-200 rounded-xl px-4 py-2.5" />
                       </div>
                       <div>
-                        <label className="block text-sm font-medium text-slate-700 mb-1.5">{isAr ? 'كلمة المرور (افتراضي)' : 'Password (Default)'}</label>
-                        <input type="text" value={newArtistData.password} onChange={(e) => setNewArtistData({...newArtistData, password: e.target.value})} className="w-full bg-white border border-slate-200 rounded-xl px-4 py-2.5" />
+                        <label className="block text-sm font-medium text-zinc-700 mb-1.5">{isAr ? 'كلمة المرور (افتراضي)' : 'Password (Default)'}</label>
+                        <input type="text" value={newArtistData.password} onChange={(e) => setNewArtistData({...newArtistData, password: e.target.value})} className="w-full bg-white border border-zinc-200 rounded-xl px-4 py-2.5" />
                       </div>
                       <div>
-                        <label className="block text-sm font-medium text-slate-700 mb-1.5">{isAr ? 'الصورة الشخصية' : 'Avatar Image'}</label>
+                        <label className="block text-sm font-medium text-zinc-700 mb-1.5">{isAr ? 'الصورة الشخصية' : 'Avatar Image'}</label>
                         <div className="flex items-center gap-3">
-                          {newArtistData.avatar_url && <img src={newArtistData.avatar_url} alt="Avatar" className="w-12 h-12 rounded-xl object-cover border border-slate-200" />}
+                          {newArtistData.avatar_url && <img src={newArtistData.avatar_url} alt="Avatar" className="w-12 h-12 rounded-xl object-cover border border-zinc-200" />}
                           <input type="file" accept="image/*" onChange={async (e) => {
                             const file = e.target.files?.[0];
                             if (file) {
                               const url = await handleFileUpload(file, 'staff');
                               if (url) setNewArtistData({...newArtistData, avatar_url: url});
                             }
-                          }} className="w-full text-sm text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-sm file:font-semibold file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100 cursor-pointer" />
+                          }} className="w-full text-sm text-zinc-500 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-sm file:font-semibold file:bg-zinc-100 file:text-zinc-900 hover:file:bg-indigo-100 cursor-pointer" />
                         </div>
                       </div>
                       <div className="md:col-span-2 grid md:grid-cols-2 gap-4 mt-2">
                         <div>
-                          <label className="block text-sm font-medium text-slate-700 mb-1.5">{isAr ? 'نبذة مختصرة / خبرة (عربي)' : 'Bio / Experience (Arabic)'}</label>
-                          <textarea rows={3} value={newArtistData.bio_ar} onChange={e => setNewArtistData({...newArtistData, bio_ar: e.target.value})} className="w-full bg-white border border-slate-200 rounded-xl px-4 py-2.5 outline-none"></textarea>
+                          <label className="block text-sm font-medium text-zinc-700 mb-1.5">{isAr ? 'نبذة مختصرة / خبرة (عربي)' : 'Bio / Experience (Arabic)'}</label>
+                          <textarea rows={3} value={newArtistData.bio_ar} onChange={e => setNewArtistData({...newArtistData, bio_ar: e.target.value})} className="w-full bg-white border border-zinc-200 rounded-xl px-4 py-2.5 outline-none"></textarea>
                         </div>
                         <div>
-                          <label className="block text-sm font-medium text-slate-700 mb-1.5">{isAr ? 'نبذة مختصرة / خبرة (إنجليزي)' : 'Bio / Experience (English)'}</label>
-                          <textarea rows={3} value={newArtistData.bio_en} onChange={e => setNewArtistData({...newArtistData, bio_en: e.target.value})} className="w-full bg-white border border-slate-200 rounded-xl px-4 py-2.5 outline-none"></textarea>
+                          <label className="block text-sm font-medium text-zinc-700 mb-1.5">{isAr ? 'نبذة مختصرة / خبرة (إنجليزي)' : 'Bio / Experience (English)'}</label>
+                          <textarea rows={3} value={newArtistData.bio_en} onChange={e => setNewArtistData({...newArtistData, bio_en: e.target.value})} className="w-full bg-white border border-zinc-200 rounded-xl px-4 py-2.5 outline-none"></textarea>
                         </div>
                       </div>
                     </div>
@@ -990,7 +998,7 @@ export function Dashboards() {
                       <button 
                         onClick={handleSaveNewArtist}
                         disabled={isSavingStaff}
-                        className="px-6 py-2.5 bg-indigo-600 text-white rounded-xl font-bold hover:bg-indigo-700 transition-colors disabled:bg-slate-400"
+                        className="px-6 py-2.5 bg-zinc-900 text-white rounded-xl font-bold hover:bg-zinc-800 transition-colors disabled:bg-slate-400"
                       >
                         {isSavingStaff ? (isAr ? 'جاري الحفظ...' : 'Saving...') : (isAr ? 'حفظ فني جديد' : 'Save New Artist')}
                       </button>
@@ -1000,19 +1008,19 @@ export function Dashboards() {
 
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                   {staffList.length === 0 ? (
-                    <p className="text-slate-500 col-span-full text-center py-8">{isAr ? 'لا يوجد موظفين مضافين' : 'No staff added'}</p>
+                    <p className="text-zinc-500 col-span-full text-center py-8">{isAr ? 'لا يوجد موظفين مضافين' : 'No staff added'}</p>
                   ) : staffList.map(st => (
-                    <div key={st.id} className="p-6 border border-slate-100 rounded-3xl bg-white flex items-center gap-4 shadow-sm hover:shadow-xl hover:shadow-indigo-900/5 hover:border-indigo-100 hover:-translate-y-1 transition-all">
-                      <div className="w-14 h-14 bg-gradient-to-br from-indigo-100 to-indigo-50 text-indigo-700 rounded-2xl flex items-center justify-center font-bold text-xl shrink-0 shadow-inner">
+                    <div key={st.id} className="p-6 border border-zinc-100 rounded-[24px] bg-white flex items-center gap-4 shadow-sm hover:shadow-xl hover:shadow-indigo-900/5 hover:border-zinc-200 hover:-translate-y-1 transition-all">
+                      <div className="w-14 h-14 bg-gradient-to-br from-indigo-100 to-indigo-50 text-zinc-900 rounded-[16px] flex items-center justify-center font-bold text-xl shrink-0 shadow-inner">
                         {st.profile?.first_name_en?.[0] || st.profile?.first_name_ar?.[0] || <Users className="w-6 h-6" />}
                       </div>
                       <div className="flex-1 min-w-0">
-                        <h4 className="font-bold text-slate-900 truncate text-lg">
+                        <h4 className="font-bold text-zinc-900 truncate text-lg">
                           {isAr ? st.profile?.first_name_ar : st.profile?.first_name_en} {isAr ? st.profile?.last_name_ar : st.profile?.last_name_en}
                         </h4>
-                        <p className="text-sm text-slate-500 truncate mt-0.5">{st.profile?.mobile}</p>
+                        <p className="text-sm text-zinc-500 truncate mt-0.5">{st.profile?.mobile}</p>
                       </div>
-                      <div className="shrink-0 text-xs font-bold bg-slate-50 text-slate-600 px-3 py-1.5 rounded-lg border border-slate-100">
+                      <div className="shrink-0 text-xs font-bold bg-zinc-50 text-zinc-600 px-3 py-1.5 rounded-lg border border-zinc-100">
                         {st.profile?.role === 'artist' ? (isAr ? 'فني' : 'Artist') : (isAr ? 'كاشير' : 'Cashier')}
                       </div>
                     </div>
@@ -1022,6 +1030,103 @@ export function Dashboards() {
             )}
           </>
         )}
+      
+        {/* Booking Details Modal */}
+        <AnimatePresence>
+          {showBookingEditModal && selectedBookingForEdit && (
+            <motion.div 
+              initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+              className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-zinc-900/40 backdrop-blur-sm"
+              onClick={() => setShowBookingEditModal(false)}
+            >
+              <motion.div 
+                initial={{ scale: 0.95, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.95, opacity: 0 }}
+                onClick={e => e.stopPropagation()}
+                className="bg-white rounded-[24px] shadow-2xl w-full max-w-2xl overflow-hidden flex flex-col max-h-[90vh]"
+              >
+                <div className="p-6 border-b border-zinc-100 flex justify-between items-center bg-zinc-50/50">
+                  <h2 className="text-xl font-bold text-zinc-900">
+                    {isAr ? 'تفاصيل الحجز' : 'Booking Details'} #{selectedBookingForEdit.id.substring(0, 6)}
+                  </h2>
+                  <button onClick={() => setShowBookingEditModal(false)} className="p-2 text-zinc-400 hover:text-zinc-600 hover:bg-zinc-100 rounded-full transition-colors">
+                    <X className="w-5 h-5" />
+                  </button>
+                </div>
+                
+                <div className="p-6 overflow-y-auto">
+                  <div className="grid md:grid-cols-2 gap-6 mb-8">
+                    <div className="bg-zinc-50 p-4 rounded-2xl border border-zinc-100">
+                      <p className="text-sm text-zinc-500 mb-1">{isAr ? 'العميل' : 'Client'}</p>
+                      <p className="font-bold text-zinc-900 text-lg">
+                        {isAr ? (selectedBookingForEdit.client?.first_name_ar || selectedBookingForEdit.client?.first_name_en) : (selectedBookingForEdit.client?.first_name_en || selectedBookingForEdit.client?.first_name_ar)}
+                      </p>
+                      <p className="text-sm text-zinc-600 mt-1">{selectedBookingForEdit.client?.mobile}</p>
+                    </div>
+                    <div className="bg-zinc-50 p-4 rounded-2xl border border-zinc-100">
+                      <p className="text-sm text-zinc-500 mb-1">{isAr ? 'الموظف (الفني)' : 'Staff (Artist)'}</p>
+                      <p className="font-bold text-zinc-900 text-lg">
+                        {isAr ? (selectedBookingForEdit.artist?.first_name_ar || selectedBookingForEdit.artist?.first_name_en) : (selectedBookingForEdit.artist?.first_name_en || selectedBookingForEdit.artist?.first_name_ar)}
+                      </p>
+                      <div className="mt-2">
+                        <StatusBadge status={selectedBookingForEdit.status} isAr={isAr} />
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="mb-8">
+                    <h3 className="text-lg font-bold text-zinc-900 mb-4">{isAr ? 'تاريخ ووقت الحجز' : 'Date & Time'}</h3>
+                    <div className="flex gap-4">
+                      <div className="flex-1 bg-white border border-zinc-200 p-3 rounded-xl flex items-center gap-3">
+                        <Calendar className="w-5 h-5 text-zinc-400" />
+                        <span className="font-medium text-zinc-900">{selectedBookingForEdit.booking_date}</span>
+                      </div>
+                      <div className="flex-1 bg-white border border-zinc-200 p-3 rounded-xl flex items-center gap-3">
+                        <Clock className="w-5 h-5 text-zinc-400" />
+                        <span className="font-medium text-zinc-900">{selectedBookingForEdit.booking_time}</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div>
+                    <h3 className="text-lg font-bold text-zinc-900 mb-4">{isAr ? 'الخدمات المطلوبة' : 'Requested Services'}</h3>
+                    <div className="space-y-3">
+                      {selectedBookingForEdit.details?.map((d: any, idx: number) => (
+                        <div key={idx} className="flex justify-between items-center p-4 bg-zinc-50 rounded-xl border border-zinc-100">
+                          <div>
+                            <p className="font-bold text-zinc-900">{isAr ? d.services?.name_ar : d.services?.name_en}</p>
+                            <p className="text-sm text-zinc-500">{d.services?.duration} {isAr ? 'دقيقة' : 'min'}</p>
+                          </div>
+                          {role !== 'artist' && (
+                            <div className="text-right">
+                              <p className="font-bold text-zinc-900">{d.price} {isAr ? 'ر.س' : 'SAR'}</p>
+                            </div>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                    {role !== 'artist' && (
+                      <div className="mt-4 pt-4 border-t border-zinc-100 flex justify-between items-center">
+                        <p className="text-lg font-bold text-zinc-900">{isAr ? 'الإجمالي' : 'Total'}</p>
+                        <p className="text-2xl font-extrabold text-zinc-900">
+                          {selectedBookingForEdit.total_price} {isAr ? 'ر.س' : 'SAR'}
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                </div>
+                
+                <div className="p-6 border-t border-zinc-100 bg-zinc-50/50 flex justify-end">
+                  <button 
+                    onClick={() => setShowBookingEditModal(false)}
+                    className="px-6 py-2.5 bg-zinc-900 text-white rounded-xl font-bold hover:bg-zinc-800 transition-colors"
+                  >
+                    {isAr ? 'إغلاق' : 'Close'}
+                  </button>
+                </div>
+              </motion.div>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </main>
     </div>
   );
@@ -1029,8 +1134,8 @@ export function Dashboards() {
 
 function NavButton({ icon: Icon, label, active, onClick }: { icon: any, label: string, active?: boolean, onClick?: () => void }) {
   return (
-    <button onClick={onClick} className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-colors ${active ? 'bg-indigo-50 text-indigo-700' : 'hover:bg-slate-100 text-slate-700'}`}>
-      <Icon className={`w-5 h-5 ${active ? 'text-indigo-600' : 'text-slate-400'}`} />
+    <button onClick={onClick} className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-colors ${active ? 'bg-zinc-100 text-zinc-900' : 'hover:bg-slate-100 text-zinc-700'}`}>
+      <Icon className={`w-5 h-5 ${active ? 'text-zinc-900' : 'text-zinc-400'}`} />
       {label}
     </button>
   );
@@ -1038,9 +1143,9 @@ function NavButton({ icon: Icon, label, active, onClick }: { icon: any, label: s
 
 function StatCard({ title, value }: { title: string, value: string }) {
   return (
-    <div className="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm">
-      <h4 className="text-sm font-medium text-slate-500">{title}</h4>
-      <p className="text-2xl font-bold text-slate-900 mt-1">{value}</p>
+    <div className="bg-white p-6 rounded-[16px] border border-zinc-100 shadow-sm">
+      <h4 className="text-sm font-medium text-zinc-500">{title}</h4>
+      <p className="text-2xl font-bold text-zinc-900 mt-1">{value}</p>
     </div>
   );
 }

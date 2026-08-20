@@ -349,43 +349,43 @@ export function ClientApp() {
         <motion.div 
           initial={{ opacity: 0, scale: 0.95 }}
           animate={{ opacity: 1, scale: 1 }}
-          className="bg-white rounded-3xl p-8 border border-slate-100 shadow-sm text-center"
+          className="bg-white rounded-[24px] p-8 border border-zinc-100 shadow-sm text-center"
         >
           <div className="w-20 h-20 bg-emerald-50 text-emerald-500 rounded-full flex items-center justify-center mx-auto mb-6">
             <CheckCircle2 className="w-10 h-10" />
           </div>
-          <h2 className="text-3xl font-bold text-slate-900 mb-2">{isAr ? 'تم تأكيد الحجز!' : 'Booking Confirmed!'}</h2>
-          <p className="text-slate-500 mb-8">
+          <h2 className="text-3xl font-bold text-zinc-900 mb-2">{isAr ? 'تم تأكيد الحجز!' : 'Booking Confirmed!'}</h2>
+          <p className="text-zinc-500 mb-8">
             {isAr ? 'تم حفظ تفاصيل حجزك بنجاح.' : 'Your booking details have been saved successfully.'}
           </p>
 
-          <div className="bg-slate-50 rounded-2xl p-6 mb-8 inline-block text-left w-full max-w-sm" dir={isAr ? 'rtl' : 'ltr'}>
-            <div className="flex justify-between items-center mb-4 pb-4 border-b border-slate-200">
-              <span className="text-slate-500 font-medium">{isAr ? 'رقم الحجز' : 'Booking ID'}</span>
-              <span className="font-bold text-slate-900">{bookingConfirmed}</span>
+          <div className="bg-zinc-50 rounded-[16px] p-6 mb-8 inline-block text-left w-full max-w-sm" dir={isAr ? 'rtl' : 'ltr'}>
+            <div className="flex justify-between items-center mb-4 pb-4 border-b border-zinc-200">
+              <span className="text-zinc-500 font-medium">{isAr ? 'رقم الحجز' : 'Booking ID'}</span>
+              <span className="font-bold text-zinc-900">{bookingConfirmed}</span>
             </div>
-            <div className="flex justify-between items-center mb-4 pb-4 border-b border-slate-200">
-              <span className="text-slate-500 font-medium">{isAr ? 'الوقت والتاريخ' : 'Date & Time'}</span>
-              <span className="font-bold text-slate-900">{selectedDate} / {selectedTime}</span>
+            <div className="flex justify-between items-center mb-4 pb-4 border-b border-zinc-200">
+              <span className="text-zinc-500 font-medium">{isAr ? 'الوقت والتاريخ' : 'Date & Time'}</span>
+              <span className="font-bold text-zinc-900">{selectedDate} / {selectedTime}</span>
             </div>
-            <div className="flex justify-between items-center mb-4 pb-4 border-b border-slate-200">
-              <span className="text-slate-500 font-medium">{isAr ? 'عدد الخدمات' : 'Services Count'}</span>
-              <span className="font-bold text-slate-900">{selectedServices.length}</span>
+            <div className="flex justify-between items-center mb-4 pb-4 border-b border-zinc-200">
+              <span className="text-zinc-500 font-medium">{isAr ? 'عدد الخدمات' : 'Services Count'}</span>
+              <span className="font-bold text-zinc-900">{selectedServices.length}</span>
             </div>
             <div className="flex justify-between items-center">
-              <span className="text-slate-500 font-medium">{isAr ? 'الإجمالي' : 'Total Amount'}</span>
-              <span className="font-bold text-indigo-600 text-lg">{currSymbol} {totalPrice}</span>
+              <span className="text-zinc-500 font-medium">{isAr ? 'الإجمالي' : 'Total Amount'}</span>
+              <span className="font-bold text-zinc-900 text-lg">{currSymbol} {totalPrice}</span>
             </div>
           </div>
 
           <div className="flex justify-center mb-8">
-            <div className="p-4 bg-white rounded-xl shadow-sm border border-slate-100">
+            <div className="p-4 bg-white rounded-xl shadow-sm border border-zinc-100">
               <QRCodeSVG value={bookingConfirmed} size={150} level="M" />
-              <p className="text-xs text-slate-400 mt-3">{isAr ? 'امسح الكود عند الوصول' : 'Scan code upon arrival'}</p>
+              <p className="text-xs text-zinc-400 mt-3">{isAr ? 'امسح الكود عند الوصول' : 'Scan code upon arrival'}</p>
             </div>
           </div>
 
-          <button onClick={resetFlow} className="w-full max-w-sm bg-slate-900 text-white py-3.5 rounded-xl font-medium hover:bg-slate-800 transition-colors">
+          <button onClick={resetFlow} className="w-full max-w-sm bg-zinc-900 text-white py-3.5 rounded-xl font-medium hover:bg-slate-800 transition-colors">
             {isAr ? 'العودة للرئيسية' : 'Back to Home'}
           </button>
         </motion.div>
@@ -396,24 +396,24 @@ export function ClientApp() {
   if (step === 'datetime' && selectedSalon) {
     return (
       <div className="max-w-3xl mx-auto p-4 md:p-8 space-y-6">
-        <button onClick={() => setStep('services')} className="flex items-center gap-2 text-slate-500 hover:text-slate-900 transition-colors font-medium">
+        <button onClick={() => setStep('services')} className="flex items-center gap-2 text-zinc-500 hover:text-zinc-900 transition-colors font-medium">
           {isAr ? <ArrowRight className="w-4 h-4" /> : <ArrowLeft className="w-4 h-4" />}
           {isAr ? 'العودة للخدمات' : 'Back to Services'}
         </button>
 
-        <div className="bg-white rounded-3xl p-6 md:p-8 border border-slate-100 shadow-sm">
-          <h2 className="text-2xl font-bold text-slate-900 mb-6">{isAr ? 'اختر الموعد والفني' : 'Select Date & Artist'}</h2>
+        <div className="bg-white rounded-[24px] p-6 md:p-8 border border-zinc-100 shadow-sm">
+          <h2 className="text-2xl font-bold text-zinc-900 mb-6">{isAr ? 'اختر الموعد والفني' : 'Select Date & Artist'}</h2>
 
           {/* Artist Selection */}
           <div className="mb-8">
-            <label className="block text-sm font-bold text-slate-700 mb-3 flex items-center gap-2">
+            <label className="block text-sm font-bold text-zinc-700 mb-3 flex items-center gap-2">
               <UserIcon className="w-5 h-5 text-indigo-500" />
               {isAr ? 'اختر فني التجميل (اختياري)' : 'Select Artist (Optional)'}
             </label>
             <div className="flex overflow-x-auto gap-3 pb-2 snap-x">
               <div 
                 onClick={() => { setSelectedStaff(''); setSelectedTime(''); }}
-                className={`flex-shrink-0 snap-start px-6 py-3 rounded-xl border-2 font-bold cursor-pointer transition-colors ${selectedStaff === '' ? 'border-indigo-600 bg-indigo-50 text-indigo-700' : 'border-slate-100 bg-white text-slate-600 hover:border-slate-200'}`}
+                className={`flex-shrink-0 snap-start px-6 py-3 rounded-xl border-2 font-bold cursor-pointer transition-colors ${selectedStaff === '' ? 'border-zinc-900 bg-zinc-100 text-zinc-900' : 'border-zinc-100 bg-white text-zinc-600 hover:border-zinc-200'}`}
               >
                 {isAr ? 'غير محدد (أي فني متاح)' : 'Any Available'}
               </div>
@@ -421,7 +421,7 @@ export function ClientApp() {
                 <div 
                   key={member.id}
                   onClick={() => { setSelectedStaff(member.id); setSelectedTime(''); }}
-                  className={`flex-shrink-0 snap-start px-6 py-3 rounded-xl border-2 font-bold cursor-pointer transition-colors flex items-center gap-3 ${selectedStaff === member.id ? 'border-indigo-600 bg-indigo-50 text-indigo-700' : 'border-slate-100 bg-white text-slate-600 hover:border-slate-200'}`}
+                  className={`flex-shrink-0 snap-start px-6 py-3 rounded-xl border-2 font-bold cursor-pointer transition-colors flex items-center gap-3 ${selectedStaff === member.id ? 'border-zinc-900 bg-zinc-100 text-zinc-900' : 'border-zinc-100 bg-white text-zinc-600 hover:border-zinc-200'}`}
                 >
                   
                   {member.profile?.avatar_url && (
@@ -436,7 +436,7 @@ export function ClientApp() {
 
           {/* Date Selection */}
           <div className="mb-8">
-            <label className="block text-sm font-bold text-slate-700 mb-3 flex items-center gap-2">
+            <label className="block text-sm font-bold text-zinc-700 mb-3 flex items-center gap-2">
               <CalendarIcon className="w-5 h-5 text-indigo-500" />
               {isAr ? 'تاريخ الحجز' : 'Booking Date'}
             </label>
@@ -445,14 +445,14 @@ export function ClientApp() {
               value={selectedDate}
               onChange={(e) => { setSelectedDate(e.target.value); setSelectedTime(''); }}
               min={new Date().toISOString().split('T')[0]}
-              className="w-full md:w-auto bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 focus:ring-2 focus:ring-indigo-500 outline-none font-medium"
+              className="w-full md:w-auto bg-zinc-50 border border-zinc-200 rounded-xl px-4 py-3 focus:ring-2 focus:ring-indigo-500 outline-none font-medium"
             />
           </div>
 
           {/* Time Slots */}
           {selectedDate && (
             <div>
-              <label className="block text-sm font-bold text-slate-700 mb-3 flex items-center gap-2">
+              <label className="block text-sm font-bold text-zinc-700 mb-3 flex items-center gap-2">
                 <Clock className="w-5 h-5 text-indigo-500" />
                 {isAr ? 'الأوقات المتاحة' : 'Available Times'}
               </label>
@@ -466,10 +466,10 @@ export function ClientApp() {
                       onClick={() => setSelectedTime(slot.time)}
                       className={`py-3 rounded-xl font-bold transition-colors ${
                         !slot.available 
-                          ? 'bg-slate-200 text-slate-400 cursor-not-allowed line-through'
+                          ? 'bg-slate-200 text-zinc-400 cursor-not-allowed line-through'
                           : selectedTime === slot.time 
-                            ? 'bg-indigo-600 text-white shadow-md' 
-                            : 'bg-slate-50 text-slate-700 hover:bg-slate-100'
+                            ? 'bg-zinc-900 text-white shadow-md' 
+                            : 'bg-zinc-50 text-zinc-700 hover:bg-slate-100'
                       }`}
                     >
                       {slot.time}
@@ -477,18 +477,18 @@ export function ClientApp() {
                   ))}
                 </div>
               ) : (
-                <div className="p-4 bg-slate-50 text-slate-500 rounded-xl text-center text-sm font-medium">
+                <div className="p-4 bg-zinc-50 text-zinc-500 rounded-xl text-center text-sm font-medium">
                   {isAr ? 'عفواً، لا يوجد أوقات متاحة في هذا اليوم.' : 'Sorry, no available times on this date.'}
                 </div>
               )}
             </div>
           )}
 
-          <div className="mt-8 pt-8 border-t border-slate-100">
+          <div className="mt-8 pt-8 border-t border-zinc-100">
             <button 
               onClick={handleBook}
               disabled={!selectedDate || !selectedTime}
-              className="w-full px-8 py-4 bg-slate-900 hover:bg-indigo-600 disabled:bg-slate-300 disabled:cursor-not-allowed text-white rounded-xl font-semibold transition-colors flex items-center justify-center gap-2 text-lg shadow-md"
+              className="w-full px-8 py-4 bg-zinc-900 hover:bg-zinc-900 disabled:bg-slate-300 disabled:cursor-not-allowed text-white rounded-xl font-semibold transition-colors flex items-center justify-center gap-2 text-lg shadow-md"
             >
               {t.book_now}
             </button>
@@ -501,12 +501,12 @@ export function ClientApp() {
   if (step === 'services' && selectedSalon) {
     return (
       <div className="max-w-3xl mx-auto p-4 md:p-8 space-y-6">
-        <button onClick={() => setSelectedSalon(null)} className="flex items-center gap-2 text-slate-500 hover:text-slate-900 transition-colors font-medium">
+        <button onClick={() => setSelectedSalon(null)} className="flex items-center gap-2 text-zinc-500 hover:text-zinc-900 transition-colors font-medium">
           {isAr ? <ArrowRight className="w-4 h-4" /> : <ArrowLeft className="w-4 h-4" />}
           {isAr ? 'العودة للصالونات' : 'Back to Salons'}
         </button>
 
-        <div className="bg-white rounded-3xl overflow-hidden border border-slate-100 shadow-sm">
+        <div className="bg-white rounded-[24px] overflow-hidden border border-zinc-100 shadow-sm">
           <div className="h-48 md:h-64 relative bg-slate-100">
             {selectedSalon.image_url && <img src={selectedSalon.image_url} alt="Salon" className="w-full h-full object-cover" />}
             <div className="absolute inset-0 bg-gradient-to-t from-slate-900/80 to-transparent" />
@@ -520,7 +520,7 @@ export function ClientApp() {
           </div>
 
           <div className="p-6 md:p-8">
-            <h3 className="text-xl font-bold text-slate-900 mb-6">{isAr ? 'اختر الخدمات' : 'Select Services'}</h3>
+            <h3 className="text-xl font-bold text-zinc-900 mb-6">{isAr ? 'اختر الخدمات' : 'Select Services'}</h3>
             <div className="space-y-3">
               {services.map(service => {
                 const isSelected = selectedServices.includes(service.id);
@@ -528,14 +528,14 @@ export function ClientApp() {
                   <div 
                     key={service.id} 
                     onClick={() => handleServiceToggle(service.id)}
-                    className={`p-4 rounded-2xl border-2 transition-all cursor-pointer flex justify-between items-center ${isSelected ? 'border-indigo-600 bg-indigo-50' : 'border-slate-100 hover:border-slate-200 bg-white'}`}
+                    className={`p-4 rounded-[16px] border-2 transition-all cursor-pointer flex justify-between items-center ${isSelected ? 'border-zinc-900 bg-zinc-100' : 'border-zinc-100 hover:border-zinc-200 bg-white'}`}
                   >
                     <div>
-                      <h4 className={`font-bold ${isSelected ? 'text-indigo-900' : 'text-slate-900'}`}>
+                      <h4 className={`font-bold ${isSelected ? 'text-indigo-900' : 'text-zinc-900'}`}>
                         {isAr ? service.name_ar : service.name_en}
                       </h4>
                     </div>
-                    <span className={`font-bold ${isSelected ? 'text-indigo-600' : 'text-slate-600'} flex flex-col items-end`}>
+                    <span className={`font-bold ${isSelected ? 'text-zinc-900' : 'text-zinc-600'} flex flex-col items-end`}>
                       {service.discount_price ? (
                         <>
                           <span className="text-xs line-through opacity-50">{currSymbol} {service.original_price}</span>
@@ -550,15 +550,15 @@ export function ClientApp() {
               })}
             </div>
 
-            <div className="mt-8 pt-8 border-t border-slate-100 flex flex-col md:flex-row items-center justify-between gap-4">
+            <div className="mt-8 pt-8 border-t border-zinc-100 flex flex-col md:flex-row items-center justify-between gap-4">
               <div>
-                <p className="text-slate-500 font-medium">{isAr ? 'إجمالي السعر' : 'Total Price'}</p>
-                <p className="text-3xl font-bold text-slate-900">{currSymbol} {totalPrice}</p>
+                <p className="text-zinc-500 font-medium">{isAr ? 'إجمالي السعر' : 'Total Price'}</p>
+                <p className="text-3xl font-bold text-zinc-900">{currSymbol} {totalPrice}</p>
               </div>
               <button 
                 onClick={handleNextToDateTime}
                 disabled={selectedServices.length === 0}
-                className="w-full md:w-auto px-8 py-3.5 bg-slate-900 hover:bg-indigo-600 disabled:bg-slate-300 disabled:cursor-not-allowed text-white rounded-xl font-semibold transition-colors flex items-center justify-center gap-2"
+                className="w-full md:w-auto px-8 py-3.5 bg-zinc-900 hover:bg-zinc-900 disabled:bg-slate-300 disabled:cursor-not-allowed text-white rounded-xl font-semibold transition-colors flex items-center justify-center gap-2"
               >
                 {isAr ? 'التالي' : 'Next'} ({selectedServices.length})
                 {isAr ? <ChevronLeft className="w-5 h-5" /> : <ChevronRight className="w-5 h-5" />}
@@ -573,14 +573,14 @@ export function ClientApp() {
   return (
     <div className="max-w-5xl mx-auto p-4 md:p-8 space-y-8 pb-24">
       {/* Hero Section */}
-      <section className="relative bg-slate-900 rounded-3xl overflow-hidden p-8 md:p-12 text-white">
+      <section className="relative bg-zinc-900 rounded-[24px] overflow-hidden p-8 md:p-12 text-white">
         <div className="absolute inset-0 opacity-20 bg-[url('https://images.unsplash.com/photo-1522337660859-02fbefca4702?auto=format&fit=crop&q=80')] bg-cover bg-center mix-blend-overlay" />
         <div className="relative z-10 max-w-lg">
           <h2 className="text-3xl md:text-4xl font-bold mb-4 leading-tight">
             {isAr ? 'اكتشف أفضل صالونات التجميل بالقرب منك' : 'Discover the best beauty salons near you'}
           </h2>
           <div className="flex bg-white/10 backdrop-blur-md rounded-full p-1.5 mt-6 border border-white/20">
-            <button className="flex-1 bg-white text-slate-900 rounded-full py-2.5 text-sm font-semibold shadow-sm">
+            <button className="flex-1 bg-white text-zinc-900 rounded-full py-2.5 text-sm font-semibold shadow-sm">
               {t.men_salons}
             </button>
             <button className="flex-1 text-white rounded-full py-2.5 text-sm font-medium hover:bg-white/10 transition-colors">
@@ -594,7 +594,7 @@ export function ClientApp() {
       <section>
         <div className="flex flex-col md:flex-row md:items-end justify-between mb-6 gap-4">
           <div>
-            <h3 className="text-xl font-bold text-slate-900">{t.discover_salons}</h3>
+            <h3 className="text-xl font-bold text-zinc-900">{t.discover_salons}</h3>
             {locationError && (
               <p className="text-sm text-red-500 font-medium mt-1">{locationError}</p>
             )}
@@ -621,7 +621,7 @@ export function ClientApp() {
                   );
                 }
               }}
-              className="text-sm font-medium text-indigo-600 flex items-center gap-1 hover:bg-indigo-50 px-3 py-1.5 rounded-lg transition-colors"
+              className="text-sm font-medium text-zinc-900 flex items-center gap-1 hover:bg-zinc-100 px-3 py-1.5 rounded-lg transition-colors"
             >
               <MapPin className="w-4 h-4" />
               {isAr ? 'تحديث الموقع' : 'Update location'}
@@ -631,26 +631,26 @@ export function ClientApp() {
 
         
         {/* Filters */}
-        <div className="bg-white p-6 rounded-3xl shadow-sm border border-slate-100 mb-8">
-          <h3 className="text-lg font-bold text-slate-900 mb-4 flex items-center gap-2">
-            <MapPin className="w-5 h-5 text-indigo-600" />
+        <div className="bg-white p-6 rounded-[24px] shadow-sm border border-zinc-100 mb-8">
+          <h3 className="text-lg font-bold text-zinc-900 mb-4 flex items-center gap-2">
+            <MapPin className="w-5 h-5 text-zinc-900" />
             {isAr ? 'تصفية الصالونات حسب المنطقة' : 'Filter Salons by Region'}
           </h3>
           <div className="grid md:grid-cols-3 gap-4">
             <div>
-              <select value={filterCountry} onChange={e => { const val = e.target.value; setFilterCountry(val); setFilterGov(''); setFilterCity(''); updateProfileLocation(val, '', ''); }} className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 outline-none font-medium">
+              <select value={filterCountry} onChange={e => { const val = e.target.value; setFilterCountry(val); setFilterGov(''); setFilterCity(''); updateProfileLocation(val, '', ''); }} className="w-full bg-zinc-50 border border-zinc-200 rounded-xl px-4 py-2.5 outline-none font-medium">
                 <option value="">{isAr ? 'كل الدول' : 'All Countries'}</option>
                 {countriesList.map(c => <option key={c.id} value={c.id}>{isAr ? c.name_ar : c.name_en}</option>)}
               </select>
             </div>
             <div>
-              <select value={filterGov} onChange={e => { const val = e.target.value; setFilterGov(val); setFilterCity(''); updateProfileLocation(filterCountry, val, ''); }} disabled={!filterCountry} className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 outline-none font-medium disabled:opacity-50">
+              <select value={filterGov} onChange={e => { const val = e.target.value; setFilterGov(val); setFilterCity(''); updateProfileLocation(filterCountry, val, ''); }} disabled={!filterCountry} className="w-full bg-zinc-50 border border-zinc-200 rounded-xl px-4 py-2.5 outline-none font-medium disabled:opacity-50">
                 <option value="">{isAr ? 'كل المحافظات' : 'All Governorates'}</option>
                 {governoratesList.filter(g => g.country_id.toString() === filterCountry.toString()).map(g => <option key={g.id} value={g.id}>{isAr ? g.name_ar : g.name_en}</option>)}
               </select>
             </div>
             <div>
-              <select value={filterCity} onChange={e => { const val = e.target.value; setFilterCity(val); updateProfileLocation(filterCountry, filterGov, val); }} disabled={!filterGov} className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 outline-none font-medium disabled:opacity-50">
+              <select value={filterCity} onChange={e => { const val = e.target.value; setFilterCity(val); updateProfileLocation(filterCountry, filterGov, val); }} disabled={!filterGov} className="w-full bg-zinc-50 border border-zinc-200 rounded-xl px-4 py-2.5 outline-none font-medium disabled:opacity-50">
                 <option value="">{isAr ? 'كل المدن' : 'All Cities'}</option>
                 {citiesList.filter(ci => ci.governorate_id.toString() === filterGov.toString()).map(city => <option key={city.id} value={city.id}>{isAr ? city.name_ar : city.name_en}</option>)}
               </select>
@@ -672,7 +672,7 @@ export function ClientApp() {
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: i * 0.1 }}
               onClick={() => handleSalonSelect(salon)}
-              className="bg-white rounded-2xl overflow-hidden border border-slate-100 shadow-sm hover:shadow-md transition-all group cursor-pointer hover:-translate-y-1"
+              className="bg-white rounded-[16px] overflow-hidden border border-zinc-100 shadow-sm hover:shadow-md transition-all group cursor-pointer hover:-translate-y-1"
             >
               <div className="h-48 overflow-hidden relative bg-slate-100">
                 {(salon.images?.[0] || salon.image_url) && <img src={salon.images?.[0] || salon.image_url} alt={isAr ? salon.name_ar : salon.name_en} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />}
@@ -683,18 +683,18 @@ export function ClientApp() {
               </div>
               <div className="p-5">
                 <div className="flex justify-between items-start mb-2">
-                  <h4 className="text-lg font-bold text-slate-900">{isAr ? salon.name_ar : salon.name_en}</h4>
+                  <h4 className="text-lg font-bold text-zinc-900">{isAr ? salon.name_ar : salon.name_en}</h4>
                   {salon.computedDistance && salon.computedDistance !== Infinity ? (
                     <span className="text-xs font-bold text-emerald-600 bg-emerald-50 px-2 py-1 rounded-full flex items-center gap-1">
                       <MapPin className="w-3 h-3" />
                       {salon.computedDistance.toFixed(1)} km
                     </span>
                   ) : (
-                    <span className="text-xs font-medium text-slate-500 bg-slate-100 px-2 py-1 rounded-full">{salon.location_text || (salon.city || 'Nearby')}</span>
+                    <span className="text-xs font-medium text-zinc-500 bg-slate-100 px-2 py-1 rounded-full">{salon.location_text || (salon.city || 'Nearby')}</span>
                   )}
                 </div>
                 <div className="flex items-center justify-end mt-4">
-                  <span className="flex items-center gap-1 text-sm font-bold text-indigo-600 group-hover:text-indigo-700">
+                  <span className="flex items-center gap-1 text-sm font-bold text-zinc-900 group-hover:text-zinc-900">
                     {t.book_now}
                     {isAr ? <ChevronLeft className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
                   </span>
@@ -703,7 +703,7 @@ export function ClientApp() {
             </motion.div>
           ))}
           {salons.length === 0 && !isLoadingData && (
-            <div className="col-span-full text-center py-12 text-slate-500">
+            <div className="col-span-full text-center py-12 text-zinc-500">
               {isAr ? 'لا يوجد صالونات متاحة حالياً.' : 'No salons available right now.'}
             </div>
           )}

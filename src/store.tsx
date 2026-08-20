@@ -13,6 +13,7 @@ interface AppContextType {
   setRole: (role: UserRole) => void;
   user: User | null;
   session: Session | null;
+  profile: any;
   isLoadingAuth: boolean;
   headerTitle: string;
   setHeaderTitle: (title: string) => void;
@@ -25,6 +26,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   const [role, setRole] = useState<UserRole>('guest');
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
+  const [profile, setProfile] = useState<any>(null);
   const [isLoadingAuth, setIsLoadingAuth] = useState(true);
   const [headerTitle, setHeaderTitle] = useState('');
 
@@ -42,6 +44,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         fetchUserRole(session.user.id);
       } else {
         setRole('guest');
+        setProfile(null);
         setIsLoadingAuth(false);
       }
     });
@@ -54,6 +57,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         fetchUserRole(session.user.id);
       } else {
         setRole('guest');
+        setProfile(null);
         setIsLoadingAuth(false);
       }
     });
@@ -65,12 +69,13 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     try {
       const { data, error } = await supabase
         .from('profiles')
-        .select('role')
+        .select('*')
         .eq('id', userId)
         .single();
         
       if (!error && data) {
         setRole(data.role as UserRole);
+        setProfile(data);
       } else {
         setRole('client'); // Default fallback
       }
@@ -82,7 +87,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   };
 
   return (
-    <AppContext.Provider value={{ lang, setLang, isAr: lang === 'ar', role, setRole, user, session, isLoadingAuth, headerTitle, setHeaderTitle }}>
+    <AppContext.Provider value={{ lang, setLang, isAr: lang === 'ar', role, setRole, user, session, profile, isLoadingAuth, headerTitle, setHeaderTitle }}>
       {children}
     </AppContext.Provider>
   );

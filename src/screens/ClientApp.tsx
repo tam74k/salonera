@@ -221,7 +221,10 @@ export function ClientApp() {
 
   const totalPrice = selectedServices.reduce((sum, id) => {
     const s = services.find(srv => srv.id === id);
-    return sum + (s?.discount_price || s?.original_price || 0);
+    if (!s) return sum;
+    const dPrice = parseFloat(s.discount_price);
+    const oPrice = parseFloat(s.original_price);
+    return sum + (dPrice > 0 ? dPrice : (oPrice || 0));
   }, 0);
 
   const currSymbol = selectedSalon?.country ? (isAr ? selectedSalon.country.currency_ar : selectedSalon.country.currency_en) : (isAr ? 'ر.س' : 'SAR');

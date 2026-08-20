@@ -97,6 +97,61 @@ export function Dashboards() {
     }
   }, [user, role]);
 
+
+  // Background task: Auto WhatsApp Reminder (1 Hour before booking)
+  useEffect(() => {
+    if (role === 'artist' || !bookings || bookings.length === 0 || !salonData) return;
+
+    const checkReminders = async () => {
+      const now = new Date();
+      
+      const remindedIds = JSON.parse(localStorage.getItem('whatsapp_reminders') || '[]');
+      let modified = false;
+      let apiUrl = '', instance = '', apiKey = '';
+
+      for (const b of bookings) {
+        if (b.status === 'confirmed' && !remindedIds.includes(b.id)) {
+          const bookingDateTimeStr = `${b.booking_date}T${b.booking_time}`;
+          const bookingDate = new Date(bookingDateTimeStr);
+          if (isNaN(bookingDate.getTime())) continue;
+
+          const diffMinutes = (bookingDate.getTime() - now.getTime()) / (1000 * 60);
+
+          // If booking is starting in 60 minutes or less (but still in the future)
+          if (diffMinutes <= 60 && diffMinutes > 0) {
+            if (b.client?.mobile) {
+              if (!apiUrl) {
+                const { data: globalSettings } = await supabase.from('app_settings').select('*').eq('id', 'global').single();
+                apiUrl = globalSettings?.evolution_api_url || 'https://evo.101488.xyz';
+                instance = salonData.evolution_instance || globalSettings?.evolution_instance || 'TamerMostafa';
+                apiKey = salonData.evolution_api_key || globalSettings?.evolution_api_key || '78518239685A-4904-A7C3-827767FA2EEE';
+              }
+
+              const clientName = isAr ? b.client.first_name_ar : b.client.first_name_en;
+              const message = isAr 
+                ? `تذكير: مرحباً ${clientName}،\nموعدك في الصالون (${b.booking_time}) اقترب ولم يتبق سوى ساعة أو أقل.\nبانتظارك!` 
+                : `Reminder: Hello ${clientName},\nYour salon appointment at (${b.booking_time}) is starting in less than an hour.\nSee you soon!`;
+              
+              await sendWhatsAppMessage(apiUrl, instance, apiKey, b.client.mobile, message);
+              remindedIds.push(b.id);
+              modified = true;
+            }
+          }
+        }
+      }
+
+      if (modified) {
+        localStorage.setItem('whatsapp_reminders', JSON.stringify(remindedIds));
+      }
+    };
+
+    // Check immediately on mount/update, then every 60 seconds
+    checkReminders();
+    const intervalId = setInterval(checkReminders, 60000);
+
+    return () => clearInterval(intervalId);
+  }, [bookings, salonData, role, isAr]);
+
   const fetchArtistBookings = async () => {
     setLoading(true);
     try {
@@ -510,6 +565,9 @@ export function Dashboards() {
     );
   }
 
+
+  const currCountry = countriesList.find(c => c.id === (salonData?.country_id || salonData?.country));
+  const currSymbol = currCountry ? (isAr ? currCountry.currency_ar : currCountry.currency_en) : (isAr ? 'ر.س' : 'SAR');
   // Admin / Cashier Dashboard View
   return (
     <div className="max-w-7xl mx-auto p-4 md:p-8 flex flex-col md:flex-row gap-8 pb-24">
@@ -915,11 +973,11 @@ export function Dashboards() {
                           <div className="flex flex-col">
                             {s.discount_price ? (
                               <>
-                                <span className="text-xs text-zinc-400 line-through">SAR {s.original_price}</span>
-                                <span className="font-black text-emerald-600 text-lg">SAR {s.discount_price}</span>
+                                <span className="text-xs text-zinc-400 line-through">{s.original_price} {currSymbol}</span>
+                                <span className="font-black text-emerald-600 text-lg">{s.discount_price} {currSymbol}</span>
                               </>
                             ) : (
-                              <span className="font-black text-zinc-900 text-lg">SAR {s.original_price}</span>
+                              <span className="font-black text-zinc-900 text-lg">{s.original_price} {currSymbol}</span>
                             )}
                           </div>
 
@@ -1098,7 +1156,7 @@ export function Dashboards() {
                           </div>
                           {role !== 'artist' && (
                             <div className="text-right">
-                              <p className="font-bold text-zinc-900">{d.price} {isAr ? 'ر.س' : 'SAR'}</p>
+                              <p className="font-bold text-zinc-900">{d.price} {currSymbol}</p>
                             </div>
                           )}
                         </div>
@@ -1108,7 +1166,7 @@ export function Dashboards() {
                       <div className="mt-4 pt-4 border-t border-zinc-100 flex justify-between items-center">
                         <p className="text-lg font-bold text-zinc-900">{isAr ? 'الإجمالي' : 'Total'}</p>
                         <p className="text-2xl font-extrabold text-zinc-900">
-                          {selectedBookingForEdit.total_price} {isAr ? 'ر.س' : 'SAR'}
+                          {selectedBookingForEdit.total_amount || selectedBookingForEdit.details?.reduce((acc, d) => acc + (parseFloat(d.price) || 0), 0) || 0} {currSymbol}
                         </p>
                       </div>
                     )}

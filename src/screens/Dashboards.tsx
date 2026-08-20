@@ -266,7 +266,10 @@ export function Dashboards() {
   };
 
   const handleSaveNewArtist = async () => {
-    if (!newArtistData.email || !salonData) return;
+    if (!newArtistData.email || !salonData) {
+      alert("Please enter the email for the new artist");
+      return;
+    }
     setIsSavingStaff(true);
     try {
       const { data, error } = await supabase.rpc('create_artist_user', {

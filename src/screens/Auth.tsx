@@ -19,6 +19,8 @@ export function AuthFlow({ onLogin }: { onLogin: (role: 'client' | 'artist' | 'a
   const [error, setError] = useState('');
   const [salonNameAr, setSalonNameAr] = useState('');
   const [salonNameEn, setSalonNameEn] = useState('');
+  const [firstNameAr, setFirstNameAr] = useState('');
+  const [firstNameEn, setFirstNameEn] = useState('');
   const [loading, setLoading] = useState(false);
   const [countryCode, setCountryCode] = useState<any>('');
   const [generatedOtp, setGeneratedOtp] = useState('');
@@ -59,7 +61,15 @@ export function AuthFlow({ onLogin }: { onLogin: (role: 'client' | 'artist' | 'a
         }
       });
 
+      
       if (signUpError) throw signUpError;
+      
+      if (data.user) {
+        await supabase.from('profiles').update({
+          first_name_ar: firstNameAr || firstNameEn,
+          first_name_en: firstNameEn || firstNameAr
+        }).eq('id', data.user.id);
+      }
       
       if (selectedRole === 'admin' && data.user) {
          // Create the salon immediately
@@ -120,7 +130,7 @@ export function AuthFlow({ onLogin }: { onLogin: (role: 'client' | 'artist' | 'a
   };
 
   const startRegistration = async () => {
-    if (!email || !password || !mobile) {
+    if (!email || !password || !mobile || !firstNameAr || !firstNameEn) {
       setError(isAr ? 'يرجى تعبئة جميع الحقول' : 'Please fill all fields');
       return;
     }
@@ -183,8 +193,20 @@ export function AuthFlow({ onLogin }: { onLogin: (role: 'client' | 'artist' | 'a
           {step === 'login' && (
             <motion.form key="login" onSubmit={handleLogin} exit={{ opacity: 0, x: -20 }} className="space-y-5">
               
+              
+              <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-slate-700 mb-1.5">{isAr ? 'الاسم الأول (عربي)' : 'First Name (Ar)'}</label>
+                    <input type="text" required value={firstNameAr} onChange={(e) => setFirstNameAr(e.target.value)} className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 outline-none" />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-slate-700 mb-1.5">{isAr ? 'الاسم الأول (انجليزي)' : 'First Name (En)'}</label>
+                    <input type="text" required value={firstNameEn} onChange={(e) => setFirstNameEn(e.target.value)} className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 outline-none" />
+                  </div>
+              </div>
               <div>
                 <label className="block text-sm font-medium text-slate-700 mb-1.5">{t.email}</label>
+
                 <div className="relative">
                   <Mail className={`absolute top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400 ${isAr ? 'right-3' : 'left-3'}`} />
                   <input type="email" required value={email} onChange={(e) => setEmail(e.target.value)} className={`w-full bg-slate-50 border border-slate-200 rounded-xl py-3 focus:ring-2 focus:ring-indigo-500 outline-none transition-all ${isAr ? 'pr-10 pl-4' : 'pl-10 pr-4'}`} placeholder="email@example.com" dir="ltr" />

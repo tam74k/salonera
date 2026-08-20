@@ -8,7 +8,7 @@ import { generateAvailableSlots } from '../lib/booking-utils';
 import { supabase } from '../lib/supabase';
 import { sendWhatsAppMessage } from '../lib/whatsapp';
 
-type BookingStep = 'salons' | 'services' | 'datetime' | 'confirmed';
+type BookingStep = 'salons' | 'services' | 'datetime' | 'confirmed' | 'my-bookings';
 
 export function ClientApp() {
   const { lang, isAr, user } = useAppContext();
@@ -75,6 +75,15 @@ export function ClientApp() {
   const [services, setServices] = useState<any[]>([]);
   const [staff, setStaff] = useState<any[]>([]);
   const [bookedTimes, setBookedTimes] = useState<string[]>([]);
+  const [myBookings, setMyBookings] = useState<any[]>([]);
+  const [reviewRating, setReviewRating] = useState(5);
+  const [reviewComment, setReviewComment] = useState('');
+  const [rescheduleBooking, setRescheduleBooking] = useState<any>(null);
+  const [rescheduleDate, setRescheduleDate] = useState('');
+  const [rescheduleTime, setRescheduleTime] = useState('');
+  const [rescheduleAvailableTimes, setRescheduleAvailableTimes] = useState<string[]>([]);
+  const [rescheduleBookedTimes, setRescheduleBookedTimes] = useState<string[]>([]);
+  const [isRescheduling, setIsRescheduling] = useState(false);
   const [isLoadingData, setIsLoadingData] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
   
@@ -117,7 +126,7 @@ export function ClientApp() {
 
   const fetchSalons = async (lat?: number, lng?: number) => {
     setIsLoadingData(true);
-    const { data } = await supabase.from('salons').select('*');
+    const { data } = await supabase.from('salons').select('*, country:countries(currency_ar, currency_en)');
     let loadedSalons = data || [];
     
     // Calculate distance and sort if lat/lng available
@@ -144,6 +153,60 @@ export function ClientApp() {
     setStaff(staffRes.data || []);
   };
 
+
+
+  const fetchRescheduleTimes = async (date: string, salonId: string, staffId: string | null) => {
+    setRescheduleDate(date);
+    setRescheduleTime('');
+    try {
+      const { data } = await supabase.from('bookings')
+        .select('booking_time')
+        .eq('booking_date', date)
+        .eq('salon_id', salonId)
+        .neq('status', 'canceled');
+      
+      let filtered = data || [];
+      if (staffId) {
+        const { data: staffBookings } = await supabase.from('bookings')
+          .select('booking_time')
+          .eq('booking_date', date)
+          .eq('staff_id', staffId)
+          .neq('status', 'canceled');
+        filtered = staffBookings || [];
+      }
+      
+      const formattedTimes = filtered.map(b => b.booking_time.substring(0, 5));
+      setRescheduleBookedTimes(formattedTimes);
+      
+      // Generate available times (simplified 9 to 21)
+      const times = [];
+      for(let h=9; h<=21; h++) {
+         const hh = h.toString().padStart(2, '0');
+         times.push(`${hh}:00`);
+         times.push(`${hh}:30`);
+      }
+      setRescheduleAvailableTimes(times);
+      
+    } catch(err) {
+      console.error(err);
+    }
+  };
+
+  const fetchMyBookings = async () => {
+    if (!user) return;
+    try {
+      const { data } = await supabase.from('bookings').select(`
+        *,
+        salon:salons(name_ar, name_en),
+        staff:staff!staff_id(profile:profiles!profile_id(first_name_ar, first_name_en)),
+        details:booking_details(services(name_ar, name_en))
+      `).eq('client_id', user.id).order('booking_date', { ascending: false }).order('booking_time', { ascending: false });
+      setMyBookings(data || []);
+    } catch(err) {
+      console.error(err);
+    }
+  };
+
   const handleSalonSelect = (salon: any) => {
     setSelectedSalon(salon);
     fetchSalonDetails(salon.id);
@@ -158,8 +221,10 @@ export function ClientApp() {
 
   const totalPrice = selectedServices.reduce((sum, id) => {
     const s = services.find(srv => srv.id === id);
-    return sum + (s?.price || 0);
+    return sum + (s?.discount_price || s?.original_price || 0);
   }, 0);
+
+  const currSymbol = selectedSalon?.country ? (isAr ? selectedSalon.country.currency_ar : selectedSalon.country.currency_en) : (isAr ? 'ر.س' : 'SAR');
 
   const handleNextToDateTime = () => {
     setStep('datetime');
@@ -250,7 +315,7 @@ export function ClientApp() {
       }
 
     } catch (err: any) {
-      alert(isAr ? 'حدث خطأ أثناء الحجز، أو أن الوقت محجوز بالفعل.' : 'Error during booking, or time already taken.');
+      alert((isAr ? 'حدث خطأ أثناء الحجز، أو أن الوقت محجوز بالفعل.' : 'Error during booking, or time already taken.') + ' ' + (err.message || JSON.stringify(err)));
       console.error(err);
     } finally {
       setIsSubmitting(false);
@@ -309,7 +374,7 @@ export function ClientApp() {
             </div>
             <div className="flex justify-between items-center">
               <span className="text-slate-500 font-medium">{isAr ? 'الإجمالي' : 'Total Amount'}</span>
-              <span className="font-bold text-indigo-600 text-lg">SAR {totalPrice}</span>
+              <span className="font-bold text-indigo-600 text-lg">{currSymbol} {totalPrice}</span>
             </div>
           </div>
 
@@ -473,11 +538,11 @@ export function ClientApp() {
                     <span className={`font-bold ${isSelected ? 'text-indigo-600' : 'text-slate-600'} flex flex-col items-end`}>
                       {service.discount_price ? (
                         <>
-                          <span className="text-xs line-through opacity-50">SAR {service.original_price}</span>
-                          <span className="text-emerald-600">SAR {service.discount_price}</span>
+                          <span className="text-xs line-through opacity-50">{currSymbol} {service.original_price}</span>
+                          <span className="text-emerald-600">{currSymbol} {service.discount_price}</span>
                         </>
                       ) : (
-                        <span>SAR {service.original_price}</span>
+                        <span>{currSymbol} {service.original_price}</span>
                       )}
                     </span>
                   </div>
@@ -488,7 +553,7 @@ export function ClientApp() {
             <div className="mt-8 pt-8 border-t border-slate-100 flex flex-col md:flex-row items-center justify-between gap-4">
               <div>
                 <p className="text-slate-500 font-medium">{isAr ? 'إجمالي السعر' : 'Total Price'}</p>
-                <p className="text-3xl font-bold text-slate-900">SAR {totalPrice}</p>
+                <p className="text-3xl font-bold text-slate-900">{currSymbol} {totalPrice}</p>
               </div>
               <button 
                 onClick={handleNextToDateTime}

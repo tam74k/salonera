@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { motion } from 'motion/react';
+import { motion, AnimatePresence } from 'motion/react';
 import { useAppContext } from '../store';
 import { translations } from '../i18n';
-import { CheckCircle2, ImageIcon, Clock, PlusCircle, Settings, Users, Calendar, LayoutDashboard, MessageSquare, Scissors, XCircle, Loader2, AlertCircle } from 'lucide-react';
+import { CheckCircle2, Image as ImageIcon, Clock, PlusCircle, Settings, Users, Calendar, LayoutDashboard, MessageSquare, Scissors, XCircle, Loader2 } from 'lucide-react';
 import { AdminInput } from '../components/AdminInput';
 import { Scanner } from '@yudiel/react-qr-scanner';
 import { sendWhatsAppMessage } from '../lib/whatsapp';
@@ -10,9 +10,12 @@ import { supabase } from '../lib/supabase';
 
 
 export function Dashboards() {
-  const { lang, isAr, role, user, setHeaderTitle } = useAppContext();
+  const { lang, isAr, role, user } = useAppContext();
   const t = translations[lang];
   const [activeTab, setActiveTab] = useState('dashboard');
+  const [artistTab, setArtistTab] = useState('today');
+  const [showBookingEditModal, setShowBookingEditModal] = useState(false);
+  const [selectedBookingForEdit, setSelectedBookingForEdit] = useState<any>(null);
   const [countriesList, setCountriesList] = useState<any[]>([]);
   const [governoratesList, setGovernoratesList] = useState<any[]>([]);
   const [citiesList, setCitiesList] = useState<any[]>([]);
@@ -84,55 +87,6 @@ export function Dashboards() {
   const [bookingViewTab, setBookingViewTab] = useState<'active'|'archive'>('active');
   const [showScanner, setShowScanner] = useState(false);
   
-  
-  const isSalonComplete = salonData && salonData.mobile && salonData.address_ar && salonData.name_ar;
-
-  useEffect(() => {
-    if (role === 'admin' && salonData && !isSalonComplete) {
-      setActiveTab('settings');
-    }
-  }, [salonData, role, isSalonComplete]);
-
-  
-  useEffect(() => {
-    const fetchHeaderData = async () => {
-      if (!user) return;
-      
-      try {
-        const { data: profile } = await supabase.from('profiles').select('first_name_ar, first_name_en, last_name_ar, last_name_en').eq('id', user.id).single();
-        let userName = '';
-        if (profile) {
-          userName = isAr ? `${profile.first_name_ar || ''} ${profile.last_name_ar || ''}`.trim() : `${profile.first_name_en || ''} ${profile.last_name_en || ''}`.trim();
-        }
-
-        let salonName = '';
-        if (role === 'admin') {
-          const { data: salon } = await supabase.from('salons').select('name_ar, name_en').eq('owner_id', user.id).single();
-          if (salon) salonName = isAr ? salon.name_ar : salon.name_en;
-        } else if (role === 'artist' || role === 'cashier') {
-          const { data: stf } = await supabase.from('staff').select('salons(name_ar, name_en)').eq('profile_id', user.id).single();
-          if (stf?.salons) {
-            const s: any = stf.salons;
-            salonName = isAr ? s.name_ar : s.name_en;
-          }
-        }
-
-        if (salonName && userName) {
-          setHeaderTitle(`${salonName} - ${userName}`);
-        } else if (salonName) {
-          setHeaderTitle(salonName);
-        } else if (userName) {
-          setHeaderTitle(userName);
-        } else {
-          setHeaderTitle('SALONERA');
-        }
-      } catch(err) {}
-    };
-    fetchHeaderData();
-    
-    return () => setHeaderTitle('');
-  }, [user, role, isAr, setHeaderTitle]);
-
   useEffect(() => {
     if (user) {
       if (role === 'artist') {
@@ -169,29 +123,11 @@ export function Dashboards() {
   const fetchSalonAndBookings = async () => {
     setLoading(true);
     try {
-      let { data: salon, error: fetchErr } = await supabase
+      const { data: salon } = await supabase
         .from('salons')
         .select('*')
         .eq('owner_id', user?.id)
         .single();
-        
-      if (!salon && user?.id) {
-        // Try to create a default salon if not exists
-        const { data: newSalon, error: createErr } = await supabase
-          .from('salons')
-          .insert({
-             owner_id: user.id,
-             name_ar: 'صالوني',
-             name_en: 'My Salon',
-             type: 'both',
-             country: 'SA',
-             currency: 'SAR'
-          })
-          .select()
-          .single();
-          
-        if (newSalon) salon = newSalon;
-      }
       
       if (salon) {
         
@@ -253,32 +189,23 @@ export function Dashboards() {
   };
 
   const handleSaveService = async () => {
-    if (!srvNameAr || !srvPrice || !salonData) {
-      alert("Please fill required fields (Name and Price)");
-      return;
-    }
+    if (!srvNameAr || !srvPrice || !salonData) return;
     setIsSavingSrv(true);
-    try {
-      const { error } = await supabase.from('services').insert({
-        salon_id: salonData.id,
-        name_ar: srvNameAr,
-        name_en: srvNameEn || srvNameAr,
-        original_price: parseFloat(srvPrice),
-        discount_price: srvDiscountPrice ? parseFloat(srvDiscountPrice) : null,
-        duration_minutes: parseInt(srvDuration) || 30
-      });
-      if (!error) {
-        setShowAddService(false);
-        setSrvNameAr(''); setSrvNameEn(''); setSrvPrice(''); setSrvDiscountPrice('');
-        fetchSalonAndBookings();
-      } else {
-        alert('Error saving service: ' + error.message);
-      }
-    } catch(e:any) {
-      console.error(e);
-      alert(e.message || 'Error saving service');
-    } finally {
-      setIsSavingSrv(false);
+    const { error } = await supabase.from('services').insert({
+      salon_id: salonData.id,
+      name_ar: srvNameAr,
+      name_en: srvNameEn || srvNameAr,
+      original_price: parseFloat(srvPrice),
+      discount_price: srvDiscountPrice ? parseFloat(srvDiscountPrice) : null,
+      duration_minutes: parseInt(srvDuration) || 30
+    });
+    setIsSavingSrv(false);
+    if (!error) {
+      setShowAddService(false);
+      setSrvNameAr(''); setSrvNameEn(''); setSrvPrice(''); setSrvDiscountPrice('');
+      fetchSalonAndBookings();
+    } else {
+      alert('Error saving service');
     }
   };
 
@@ -333,19 +260,12 @@ export function Dashboards() {
   };
 
   const handleSaveNewArtist = async () => {
-    if (!newArtistData.email) {
-      alert("Please enter the email for the new artist");
-      return;
-    }
-    if (!salonData) {
-      alert("Error: Salon data not found for this account. Please contact support.");
-      return;
-    }
+    if (!newArtistData.email || !salonData) return;
     setIsSavingStaff(true);
     try {
       const { data, error } = await supabase.rpc('create_artist_user', {
         p_email: newArtistData.email,
-        p_password: newArtistData.password || '123456',
+        p_password: newArtistData.password,
         p_first_name_ar: newArtistData.first_name_ar,
         p_first_name_en: newArtistData.first_name_en,
         p_mobile: newArtistData.mobile,
@@ -358,14 +278,11 @@ export function Dashboards() {
         alert(error.message);
       } else {
         setShowAddStaff(false);
-        setNewArtistData({ email: '', mobile: '', first_name_ar: '', first_name_en: '', password: '123456', avatar_url: '', bio_ar: '', bio_en: '' });
+        setNewArtistData({ email: '', mobile: '', first_name_ar: '', first_name_en: '', password: '123456', avatar_url: '' });
         fetchSalonAndBookings();
       }
-    } catch(e:any) {
+    } catch(e) {
       console.error(e);
-      alert(e.message || 'Error saving artist');
-    } finally {
-      setIsSavingStaff(false);
     }
     setIsSavingStaff(false);
   };
@@ -376,9 +293,9 @@ export function Dashboards() {
     const { error } = await supabase.from('salons').update({
       evolution_instance: evoInstance,
       evolution_api_key: evoApiKey,
-      country_id: salonCountry ? parseInt(salonCountry?.toString()) : null,
-      governorate_id: salonGov ? parseInt(salonGov?.toString()) : null,
-      city_id: salonCity ? parseInt(salonCity?.toString()) : null,
+      country_id: salonCountry ? parseInt(salonCountry.toString()) : null,
+      governorate_id: salonGov ? parseInt(salonGov.toString()) : null,
+      city_id: salonCity ? parseInt(salonCity.toString()) : null,
       lat: salonLat,
       lng: salonLng,
       name_ar: salonSettingsData.name_ar,
@@ -392,7 +309,7 @@ export function Dashboards() {
       whatsapp: salonSettingsData.whatsapp,
       working_hours_start: salonSettingsData.working_hours_start,
       working_hours_end: salonSettingsData.working_hours_end,
-      type: salonSettingsData.salon_type,
+      salon_type: salonSettingsData.salon_type,
       images: salonSettingsData.images,
       social_media: {
         instagram: salonSettingsData.instagram,
@@ -404,11 +321,6 @@ export function Dashboards() {
     setIsSavingSettings(false);
     if (!error) {
       alert(isAr ? 'تم الحفظ بنجاح' : 'Saved successfully');
-      fetchSalonAndBookings();
-      setActiveTab('dashboard');
-    } else {
-      console.error("Save error:", error);
-      alert((isAr ? 'حدث خطأ أثناء الحفظ: ' : 'Error saving: ') + error.message);
     }
   };
 
@@ -485,9 +397,10 @@ export function Dashboards() {
           <div className="absolute right-0 top-0 opacity-10">
             <Scissors className="w-64 h-64 -mr-12 -mt-12 text-white" />
           </div>
+          
           <h2 className="text-3xl md:text-4xl font-bold relative z-10 mb-2">{t.welcome_artist}</h2>
           <p className="text-indigo-200 relative z-10 font-medium">
-            {isAr ? `لديك ${artistBookings.filter(b => b.booking_date === new Date().toISOString().split('T')[0] && (b.status === 'pending' || b.status === 'confirmed')).length} مواعيد قادمة اليوم` : `You have ${artistBookings.filter(b => b.booking_date === new Date().toISOString().split('T')[0] && (b.status === 'pending' || b.status === 'confirmed')).length} upcoming appointments today`}
+            {isAr ? 'مرحباً بك في لوحة تحكم الفني' : 'Welcome to the Artist Dashboard'}
           </p>
         </div>
 
@@ -496,52 +409,96 @@ export function Dashboards() {
             <Loader2 className="w-8 h-8 animate-spin text-indigo-600" />
           </div>
         ) : (
-          <div className="grid gap-4">
-            <h3 className="text-xl font-bold text-slate-900 flex items-center gap-2 mb-2">
-              <Calendar className="w-5 h-5 text-indigo-500" />
-              {t.today_bookings}
-            </h3>
-            {artistBookings.length === 0 ? (
-              <div className="p-12 text-center text-slate-500 bg-white rounded-3xl border border-slate-100">
-                {isAr ? 'لا يوجد لديك مواعيد حتى الآن.' : 'You have no appointments yet.'}
-              </div>
-            ) : artistBookings.map((b, i) => (
-              <motion.div 
-                key={b.id}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: i * 0.1 }}
-                className="bg-white p-5 md:p-6 rounded-3xl border border-slate-100 shadow-sm hover:shadow-md hover:border-indigo-100 transition-all flex flex-col md:flex-row md:items-center justify-between gap-4 group"
+          <div className="space-y-6">
+            <div className="flex flex-wrap gap-2 bg-slate-100 p-1.5 rounded-2xl w-fit">
+              <button 
+                onClick={() => setArtistTab('today')}
+                className={`px-6 py-2.5 rounded-xl font-bold text-sm transition-all ${artistTab === 'today' ? 'bg-white text-indigo-700 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
               >
-                <div>
-                  <div className="flex items-center gap-3 mb-2">
-                    <span className="text-sm font-bold text-indigo-700 bg-indigo-50 px-3 py-1 rounded-lg">{b.booking_time}</span>
-                    <span className="text-sm font-medium text-slate-400">{b.booking_date}</span>
-                    <StatusBadge status={b.status} isAr={isAr} />
-                  </div>
-                  <h4 className="text-lg font-bold text-slate-900">
-                    {b.client?.first_name_ar || 'Client'}
-                  </h4>
-                  <p className="text-slate-500 text-sm mt-1">
-                    {b.details?.map((d: any) => isAr ? d.services?.name_ar : d.services?.name_en).join(' + ')}
-                  </p>
-                </div>
-                
-                <div className="flex items-center gap-3 mt-2 md:mt-0">
-                  {b.status === 'confirmed' && (
-                    <button onClick={() => updateBookingStatus(b.id, 'completed', true)} className="w-full md:w-auto px-6 py-3 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-sm font-semibold transition-colors flex items-center justify-center gap-2 shadow-sm shadow-emerald-600/20">
-                      <CheckCircle2 className="w-4 h-4" />
-                      {t.mark_completed}
-                    </button>
-                  )}
-                  {b.status === 'pending' && (
-                    <span className="text-sm font-medium text-slate-500 bg-slate-50 px-4 py-2 rounded-xl border border-slate-200">
-                      {isAr ? 'بانتظار تأكيد الإدارة' : 'Awaiting Admin Confirmation'}
-                    </span>
-                  )}
-                </div>
-              </motion.div>
-            ))}
+                {isAr ? 'حجوزات اليوم' : 'Today Bookings'}
+              </button>
+              <button 
+                onClick={() => setArtistTab('upcoming')}
+                className={`px-6 py-2.5 rounded-xl font-bold text-sm transition-all ${artistTab === 'upcoming' ? 'bg-white text-indigo-700 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
+              >
+                {isAr ? 'حجوزات قادمة' : 'Upcoming Bookings'}
+              </button>
+              <button 
+                onClick={() => setArtistTab('past')}
+                className={`px-6 py-2.5 rounded-xl font-bold text-sm transition-all ${artistTab === 'past' ? 'bg-white text-indigo-700 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
+              >
+                {isAr ? 'حجوزات سابقة' : 'Past Bookings'}
+              </button>
+            </div>
+
+            <div className="grid gap-4">
+              {(() => {
+                const todayStr = new Date().toISOString().split('T')[0];
+                const filtered = artistBookings.filter(b => {
+                   if (artistTab === 'today') {
+                      return b.booking_date === todayStr && (b.status === 'confirmed' || b.status === 'pending');
+                   } else if (artistTab === 'upcoming') {
+                      return b.booking_date > todayStr && (b.status === 'confirmed' || b.status === 'pending');
+                   } else {
+                      return b.booking_date < todayStr || b.status === 'completed' || b.status === 'canceled';
+                   }
+                }).sort((a, b) => {
+                   const dA = new Date(`${a.booking_date}T${a.booking_time}`).getTime();
+                   const dB = new Date(`${b.booking_date}T${b.booking_time}`).getTime();
+                   return artistTab === 'past' ? dB - dA : dA - dB;
+                });
+
+                if (filtered.length === 0) {
+                   return (
+                      <div className="p-12 text-center text-slate-500 bg-white rounded-3xl border border-slate-100">
+                        {isAr ? 'لا يوجد مواعيد في هذا القسم' : 'No bookings in this section'}
+                      </div>
+                   );
+                }
+
+                return filtered.map((b, i) => (
+                  <motion.div 
+                    key={b.id}
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: i * 0.1 }}
+                    className="bg-white p-5 md:p-6 rounded-3xl border border-slate-100 shadow-sm hover:shadow-md transition-all flex flex-col md:flex-row md:items-center justify-between gap-4 group"
+                  >
+                    <div>
+                      <div className="flex items-center gap-3 mb-2">
+                        <span className="text-sm font-bold text-indigo-700 bg-indigo-50 px-3 py-1 rounded-lg">{b.booking_time}</span>
+                        <span className="text-sm font-medium text-slate-400">{b.booking_date}</span>
+                        <StatusBadge status={b.status} isAr={isAr} />
+                      </div>
+                      <h4 className="text-lg font-bold text-slate-900">
+                        {isAr ? (b.client?.first_name_ar || b.client?.first_name_en) : (b.client?.first_name_en || b.client?.first_name_ar) || 'Client'}
+                      </h4>
+                      <p className="text-slate-500 text-sm mt-1 flex flex-wrap gap-1">
+                        {b.details?.map((d: any, idx: number) => (
+                          <span key={idx} className="bg-slate-100 px-2 py-1 rounded-md text-slate-600 font-medium text-xs">
+                             {isAr ? d.services?.name_ar : d.services?.name_en}
+                          </span>
+                        ))}
+                      </p>
+                    </div>
+                    
+                    <div className="flex items-center gap-3 mt-2 md:mt-0">
+                      {artistTab === 'today' && b.status === 'confirmed' && (
+                        <button onClick={() => updateBookingStatus(b.id, 'completed', true)} className="w-full md:w-auto px-6 py-3 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-sm font-semibold transition-colors flex items-center justify-center gap-2 shadow-sm shadow-emerald-600/20">
+                          <CheckCircle2 className="w-4 h-4" />
+                          {isAr ? 'تأكيد وصول العميل (مكتمل)' : 'Mark Arrived (Completed)'}
+                        </button>
+                      )}
+                      {artistTab === 'today' && b.status === 'pending' && (
+                        <span className="text-sm font-medium text-slate-500 bg-slate-50 px-4 py-2 rounded-xl border border-slate-200">
+                          {isAr ? 'بانتظار الإدارة' : 'Awaiting Admin'}
+                        </span>
+                      )}
+                    </div>
+                  </motion.div>
+                ));
+              })()}
+            </div>
           </div>
         )}
       </div>
@@ -558,11 +515,11 @@ export function Dashboards() {
           <p className="text-xs text-slate-400">{salonData ? (isAr ? salonData.name_ar : salonData.name_en) : '...'}</p>
         </div>
         
-        {isSalonComplete && <NavButton icon={LayoutDashboard} label={t.dashboard} active={activeTab === 'dashboard'} onClick={() => setActiveTab('dashboard')} />}
+        <NavButton icon={LayoutDashboard} label={t.dashboard} active={activeTab === 'dashboard'} onClick={() => setActiveTab('dashboard')} />
         
-        {isSalonComplete && <NavButton icon={Users} label={t.staff_management} active={activeTab === 'staff'} onClick={() => setActiveTab('staff')} />}
-        {isSalonComplete && <NavButton icon={Scissors} label={t.services_management} active={activeTab === 'services'} onClick={() => setActiveTab('services')} />}
-        <NavButton icon={MessageSquare} label={isSalonComplete ? t.whatsapp_api_settings : (isAr ? 'إعدادات الصالون (مطلوب)' : 'Salon Settings (Required)')} active={activeTab === 'settings'} onClick={() => setActiveTab('settings')} />
+        <NavButton icon={Users} label={t.staff_management} active={activeTab === 'staff'} onClick={() => setActiveTab('staff')} />
+        <NavButton icon={Scissors} label={t.services_management} active={activeTab === 'services'} onClick={() => setActiveTab('services')} />
+        <NavButton icon={MessageSquare} label={t.whatsapp_api_settings} active={activeTab === 'settings'} onClick={() => setActiveTab('settings')} />
       </aside>
 
       {/* Main Content Area */}
@@ -702,14 +659,6 @@ export function Dashboards() {
             
             {activeTab === 'settings' && (
               <section className="bg-white p-6 md:p-8 rounded-3xl shadow-sm border border-slate-100">
-                {!isSalonComplete && (
-                  <div className="mb-6 p-4 bg-amber-50 border border-amber-200 text-amber-800 rounded-xl flex items-start gap-3">
-                    <AlertCircle className="w-5 h-5 mt-0.5 shrink-0" />
-                    <p className="font-medium text-sm">
-                      {isAr ? 'يرجى استكمال بيانات الصالون الأساسية (رقم الجوال والعنوان) لتتمكن من استخدام باقي خصائص لوحة التحكم.' : 'Please complete your basic salon data (mobile and address) to unlock the rest of the dashboard features.'}
-                    </p>
-                  </div>
-                )}
                 <div className="mb-6">
                   <h3 className="text-xl font-bold text-slate-900 flex items-center gap-2">
                     <MessageSquare className="w-5 h-5 text-emerald-500" />
@@ -792,7 +741,7 @@ export function Dashboards() {
                           <img src={salonSettingsData.images[i]} alt="" className="w-full h-32 object-cover rounded-xl border border-slate-200" />
                           <button 
                             onClick={() => {
-                               const newImages = [...(salonSettingsData.images || [])];
+                               const newImages = [...salonSettingsData.images];
                                newImages.splice(i, 1);
                                setSalonSettingsData({...salonSettingsData, images: newImages});
                             }}
@@ -802,7 +751,7 @@ export function Dashboards() {
                           </button>
                         </div>
                       ) : (
-                        <div className="relative w-full h-32 bg-slate-50 rounded-xl border border-dashed border-slate-300 flex items-center justify-center text-slate-400 flex-col">
+                        <div className="w-full h-32 bg-slate-50 rounded-xl border border-dashed border-slate-300 flex items-center justify-center text-slate-400 flex-col">
                           <ImageIcon className="w-6 h-6 mb-2" />
                           <span className="text-xs">{isAr ? 'اضغط لرفع صورة' : 'Click to upload'}</span>
                           <input 
@@ -827,31 +776,6 @@ export function Dashboards() {
                   ))}
                 </div>
 
-
-
-                <div className="mt-8 mb-6">
-                  <h3 className="text-xl font-bold text-slate-900 flex items-center gap-2">
-                    {isAr ? 'حسابات التواصل الاجتماعي (اختياري)' : 'Social Media Accounts (Optional)'}
-                  </h3>
-                </div>
-                <div className="grid md:grid-cols-2 gap-4 mb-6">
-                  <div>
-                    <label className="block text-sm font-medium text-slate-700 mb-1.5">Instagram</label>
-                    <input type="text" placeholder="@username" value={salonSettingsData.instagram} onChange={e => setSalonSettingsData({...salonSettingsData, instagram: e.target.value})} className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 outline-none" dir="ltr" />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-slate-700 mb-1.5">TikTok</label>
-                    <input type="text" placeholder="@username" value={salonSettingsData.tiktok} onChange={e => setSalonSettingsData({...salonSettingsData, tiktok: e.target.value})} className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 outline-none" dir="ltr" />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-slate-700 mb-1.5">X (Twitter)</label>
-                    <input type="text" placeholder="@username" value={salonSettingsData.x} onChange={e => setSalonSettingsData({...salonSettingsData, x: e.target.value})} className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 outline-none" dir="ltr" />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-slate-700 mb-1.5">Facebook</label>
-                    <input type="text" placeholder="Page URL or Username" value={salonSettingsData.facebook} onChange={e => setSalonSettingsData({...salonSettingsData, facebook: e.target.value})} className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 outline-none" dir="ltr" />
-                  </div>
-                </div>
                 <div className="mt-8 mb-6">
                   <h3 className="text-xl font-bold text-slate-900 flex items-center gap-2">
                     {t.whatsapp_api_settings} (Evolution API)
@@ -885,14 +809,14 @@ export function Dashboards() {
                     <label className="block text-sm font-medium text-slate-700 mb-1.5">{isAr ? 'المحافظة / المنطقة' : 'Governorate / Region'}</label>
                     <select value={salonGov} onChange={(e) => { setSalonGov(e.target.value); setSalonCity(''); }} disabled={!salonCountry} className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 outline-none font-medium disabled:opacity-50">
                       <option value="">{isAr ? 'اختر المحافظة' : 'Select Governorate'}</option>
-                      {governoratesList.filter(g => g.country_id?.toString() === salonCountry?.toString()).map(g => <option key={g.id} value={g.id}>{isAr ? g.name_ar : g.name_en}</option>)}
+                      {governoratesList.filter(g => g.country_id.toString() === salonCountry.toString()).map(g => <option key={g.id} value={g.id}>{isAr ? g.name_ar : g.name_en}</option>)}
                     </select>
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-slate-700 mb-1.5">{isAr ? 'المدينة' : 'City'}</label>
                     <select value={salonCity} onChange={(e) => setSalonCity(e.target.value)} disabled={!salonGov} className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 outline-none font-medium disabled:opacity-50">
                       <option value="">{isAr ? 'اختر المدينة' : 'Select City'}</option>
-                      {citiesList.filter(ci => ci.governorate_id?.toString() === salonGov?.toString()).map(city => <option key={city.id} value={city.id}>{isAr ? city.name_ar : city.name_en}</option>)}
+                      {citiesList.filter(ci => ci.governorate_id.toString() === salonGov.toString()).map(city => <option key={city.id} value={city.id}>{isAr ? city.name_ar : city.name_en}</option>)}
                     </select>
                   </div>
                 </div>

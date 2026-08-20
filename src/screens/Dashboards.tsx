@@ -84,6 +84,15 @@ export function Dashboards() {
   const [bookingViewTab, setBookingViewTab] = useState<'active'|'archive'>('active');
   const [showScanner, setShowScanner] = useState(false);
   
+  
+  const isSalonComplete = salonData && salonData.mobile && salonData.address_ar && salonData.name_ar;
+
+  useEffect(() => {
+    if (role === 'admin' && salonData && !isSalonComplete) {
+      setActiveTab('settings');
+    }
+  }, [salonData, role, isSalonComplete]);
+
   useEffect(() => {
     if (user) {
       if (role === 'artist') {
@@ -120,11 +129,29 @@ export function Dashboards() {
   const fetchSalonAndBookings = async () => {
     setLoading(true);
     try {
-      const { data: salon } = await supabase
+      let { data: salon, error: fetchErr } = await supabase
         .from('salons')
         .select('*')
         .eq('owner_id', user?.id)
         .single();
+        
+      if (!salon && user?.id) {
+        // Try to create a default salon if not exists
+        const { data: newSalon, error: createErr } = await supabase
+          .from('salons')
+          .insert({
+             owner_id: user.id,
+             name_ar: 'صالوني',
+             name_en: 'My Salon',
+             type: 'both',
+             country: 'SA',
+             currency: 'SAR'
+          })
+          .select()
+          .single();
+          
+        if (newSalon) salon = newSalon;
+      }
       
       if (salon) {
         
@@ -266,8 +293,12 @@ export function Dashboards() {
   };
 
   const handleSaveNewArtist = async () => {
-    if (!newArtistData.email || !salonData) {
+    if (!newArtistData.email) {
       alert("Please enter the email for the new artist");
+      return;
+    }
+    if (!salonData) {
+      alert("Error: Salon data not found for this account. Please contact support.");
       return;
     }
     setIsSavingStaff(true);
@@ -482,11 +513,11 @@ export function Dashboards() {
           <p className="text-xs text-slate-400">{salonData ? (isAr ? salonData.name_ar : salonData.name_en) : '...'}</p>
         </div>
         
-        <NavButton icon={LayoutDashboard} label={t.dashboard} active={activeTab === 'dashboard'} onClick={() => setActiveTab('dashboard')} />
+        {isSalonComplete && <NavButton icon={LayoutDashboard} label={t.dashboard} active={activeTab === 'dashboard'} onClick={() => setActiveTab('dashboard')} />}
         
-        <NavButton icon={Users} label={t.staff_management} active={activeTab === 'staff'} onClick={() => setActiveTab('staff')} />
-        <NavButton icon={Scissors} label={t.services_management} active={activeTab === 'services'} onClick={() => setActiveTab('services')} />
-        <NavButton icon={MessageSquare} label={t.whatsapp_api_settings} active={activeTab === 'settings'} onClick={() => setActiveTab('settings')} />
+        {isSalonComplete && <NavButton icon={Users} label={t.staff_management} active={activeTab === 'staff'} onClick={() => setActiveTab('staff')} />}
+        {isSalonComplete && <NavButton icon={Scissors} label={t.services_management} active={activeTab === 'services'} onClick={() => setActiveTab('services')} />}
+        <NavButton icon={MessageSquare} label={isSalonComplete ? t.whatsapp_api_settings : (isAr ? 'إعدادات الصالون (مطلوب)' : 'Salon Settings (Required)')} active={activeTab === 'settings'} onClick={() => setActiveTab('settings')} />
       </aside>
 
       {/* Main Content Area */}
@@ -626,6 +657,14 @@ export function Dashboards() {
             
             {activeTab === 'settings' && (
               <section className="bg-white p-6 md:p-8 rounded-3xl shadow-sm border border-slate-100">
+                {!isSalonComplete && (
+                  <div className="mb-6 p-4 bg-amber-50 border border-amber-200 text-amber-800 rounded-xl flex items-start gap-3">
+                    <AlertCircle className="w-5 h-5 mt-0.5 shrink-0" />
+                    <p className="font-medium text-sm">
+                      {isAr ? 'يرجى استكمال بيانات الصالون الأساسية (رقم الجوال والعنوان) لتتمكن من استخدام باقي خصائص لوحة التحكم.' : 'Please complete your basic salon data (mobile and address) to unlock the rest of the dashboard features.'}
+                    </p>
+                  </div>
+                )}
                 <div className="mb-6">
                   <h3 className="text-xl font-bold text-slate-900 flex items-center gap-2">
                     <MessageSquare className="w-5 h-5 text-emerald-500" />

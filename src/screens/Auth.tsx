@@ -17,6 +17,8 @@ export function AuthFlow({ onLogin }: { onLogin: (role: 'client' | 'artist' | 'a
   const [password, setPassword] = useState('');
   const [mobile, setMobile] = useState('');
   const [error, setError] = useState('');
+  const [salonNameAr, setSalonNameAr] = useState('');
+  const [salonNameEn, setSalonNameEn] = useState('');
   const [loading, setLoading] = useState(false);
   const [countryCode, setCountryCode] = useState<any>('');
   const [generatedOtp, setGeneratedOtp] = useState('');
@@ -58,6 +60,21 @@ export function AuthFlow({ onLogin }: { onLogin: (role: 'client' | 'artist' | 'a
       });
 
       if (signUpError) throw signUpError;
+      
+      if (selectedRole === 'admin' && data.user) {
+         // Create the salon immediately
+         const { error: salonErr } = await supabase.from('salons').insert({
+             owner_id: data.user.id,
+             name_ar: salonNameAr,
+             name_en: salonNameEn,
+             type: 'both',
+             country: 'SA',
+             currency: 'SAR'
+         });
+         if (salonErr) {
+             console.error("Failed to insert salon:", salonErr);
+         }
+      }
       
       // If auto-login is successful
       if (data.session) {
@@ -104,6 +121,10 @@ export function AuthFlow({ onLogin }: { onLogin: (role: 'client' | 'artist' | 'a
 
   const startRegistration = async () => {
     if (!email || !password || !mobile) {
+      setError(isAr ? 'يرجى تعبئة جميع الحقول' : 'Please fill all fields');
+      return;
+    }
+    if (selectedRole === 'admin' && (!salonNameAr || !salonNameEn)) {
       setError(isAr ? 'يرجى تعبئة جميع الحقول' : 'Please fill all fields');
       return;
     }
@@ -211,6 +232,19 @@ export function AuthFlow({ onLogin }: { onLogin: (role: 'client' | 'artist' | 'a
                   <ChevronDown className={`absolute top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400 pointer-events-none ${isAr ? 'right-3' : 'left-3'}`} />
                 </div>
               </div>
+              
+              {selectedRole === 'admin' && (
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-slate-700 mb-1.5">{isAr ? 'اسم الصالون (عربي)' : 'Salon Name (Ar)'}</label>
+                    <input type="text" required value={salonNameAr} onChange={(e) => setSalonNameAr(e.target.value)} className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 outline-none" placeholder="مثال: صالون الجمال" />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-slate-700 mb-1.5">{isAr ? 'اسم الصالون (انجليزي)' : 'Salon Name (En)'}</label>
+                    <input type="text" required value={salonNameEn} onChange={(e) => setSalonNameEn(e.target.value)} className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 outline-none" placeholder="e.g: Beauty Salon" />
+                  </div>
+                </div>
+              )}
 
               <div>
                 <label className="block text-sm font-medium text-slate-700 mb-1.5">{t.email}</label>

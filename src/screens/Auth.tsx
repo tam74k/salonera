@@ -91,7 +91,8 @@ export function AuthFlow({ onLogin }: { onLogin: (role: 'client' | 'artist' | 'a
              name_en: salonNameEn,
              type: 'both',
              country: 'SA',
-             currency: 'SAR'
+             currency: 'SAR',
+             mobile: mobile
          });
          if (salonErr) {
              console.error("Failed to insert salon:", salonErr);
@@ -100,11 +101,31 @@ export function AuthFlow({ onLogin }: { onLogin: (role: 'client' | 'artist' | 'a
       
       // If auto-login is successful
       if (data.session) {
+
+        setEmail('');
+        setPassword('');
+        setFirstNameAr('');
+        setFirstNameEn('');
+        setSalonNameAr('');
+        setSalonNameEn('');
+        setMobile('');
+        setOtpInputs(['', '', '', '']);
+
         setRole(selectedRole);
         onLogin(selectedRole);
       } else {
         // Fallback if email confirmation is required by Supabase settings
         setError(isAr ? 'تم التسجيل بنجاح. يمكنك تسجيل الدخول الآن.' : 'Registered successfully. You can log in now.');
+
+        setEmail('');
+        setPassword('');
+        setFirstNameAr('');
+        setFirstNameEn('');
+        setSalonNameAr('');
+        setSalonNameEn('');
+        setMobile('');
+        setOtpInputs(['', '', '', '']);
+
         setStep('login');
       }
     } catch (err: any) {
@@ -131,6 +152,16 @@ export function AuthFlow({ onLogin }: { onLogin: (role: 'client' | 'artist' | 'a
         const { data: profile } = await supabase.from('profiles').select('role').eq('id', data.session.user.id).single();
         const roleToUse = profile?.role || 'client';
         setRole(roleToUse as any);
+        
+        setEmail('');
+        setPassword('');
+        setFirstNameAr('');
+        setFirstNameEn('');
+        setSalonNameAr('');
+        setSalonNameEn('');
+        setMobile('');
+        setOtpInputs(['', '', '', '']);
+
         onLogin(roleToUse as any);
       }
       
@@ -297,7 +328,7 @@ export function AuthFlow({ onLogin }: { onLogin: (role: 'client' | 'artist' | 'a
                     defaultCountry={countryCode || 'SA'}
                     value={mobile}
                     onChange={(val: any) => setMobile(val || '')}
-                    className="w-full bg-zinc-50 border border-zinc-200 rounded-xl px-4 py-3 focus-within:ring-2 focus-within:ring-indigo-500 outline-none transition-all"
+                    className="w-full bg-zinc-50 border border-zinc-200 rounded-xl px-4 py-3 focus-within:ring-2 focus-within:ring-zinc-900 outline-none transition-all"
                   />
                 </div>
               </div>
@@ -310,7 +341,7 @@ export function AuthFlow({ onLogin }: { onLogin: (role: 'client' | 'artist' | 'a
               </div>
               
               <div className="pt-4">
-                <button type="button" onClick={startRegistration} className="w-full bg-emerald-600 hover:bg-emerald-700 text-white py-3.5 rounded-xl font-medium transition-colors flex items-center justify-center gap-2">
+                <button type="button" onClick={startRegistration} className="w-full bg-zinc-900 hover:bg-zinc-800 text-white py-3.5 rounded-xl font-medium transition-colors flex items-center justify-center gap-2">
                   <MessageSquare className="w-5 h-5" />
                   {t.send_otp} (WhatsApp)
                 </button>
@@ -325,7 +356,7 @@ export function AuthFlow({ onLogin }: { onLogin: (role: 'client' | 'artist' | 'a
 
           {step === 'otp' && (
             <motion.form key="otp" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} onSubmit={handleVerifyOTP} className="space-y-6 text-center">
-              <div className="w-16 h-16 bg-emerald-50 rounded-full flex items-center justify-center mx-auto text-emerald-600 mb-4">
+              <div className="w-16 h-16 bg-zinc-100 rounded-full flex items-center justify-center mx-auto text-zinc-900 mb-4">
                 <MessageSquare className="w-8 h-8" />
               </div>
               <p className="text-zinc-600 text-sm">

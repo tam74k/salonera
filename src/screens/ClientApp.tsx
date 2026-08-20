@@ -354,7 +354,7 @@ export function ClientApp() {
           animate={{ opacity: 1, scale: 1 }}
           className="bg-white rounded-[24px] p-8 border border-zinc-100 shadow-sm text-center"
         >
-          <div className="w-20 h-20 bg-emerald-50 text-emerald-500 rounded-full flex items-center justify-center mx-auto mb-6">
+          <div className="w-20 h-20 bg-zinc-100 text-zinc-900 rounded-full flex items-center justify-center mx-auto mb-6">
             <CheckCircle2 className="w-10 h-10" />
           </div>
           <h2 className="text-3xl font-bold text-zinc-900 mb-2">{isAr ? 'تم تأكيد الحجز!' : 'Booking Confirmed!'}</h2>
@@ -410,7 +410,7 @@ export function ClientApp() {
           {/* Artist Selection */}
           <div className="mb-8">
             <label className="block text-sm font-bold text-zinc-700 mb-3 flex items-center gap-2">
-              <UserIcon className="w-5 h-5 text-indigo-500" />
+              <UserIcon className="w-5 h-5 text-zinc-900" />
               {isAr ? 'اختر فني التجميل (اختياري)' : 'Select Artist (Optional)'}
             </label>
             <div className="flex overflow-x-auto gap-3 pb-2 snap-x">
@@ -440,7 +440,7 @@ export function ClientApp() {
           {/* Date Selection */}
           <div className="mb-8">
             <label className="block text-sm font-bold text-zinc-700 mb-3 flex items-center gap-2">
-              <CalendarIcon className="w-5 h-5 text-indigo-500" />
+              <CalendarIcon className="w-5 h-5 text-zinc-900" />
               {isAr ? 'تاريخ الحجز' : 'Booking Date'}
             </label>
             <input 
@@ -448,7 +448,7 @@ export function ClientApp() {
               value={selectedDate}
               onChange={(e) => { setSelectedDate(e.target.value); setSelectedTime(''); }}
               min={new Date().toISOString().split('T')[0]}
-              className="w-full md:w-auto bg-zinc-50 border border-zinc-200 rounded-xl px-4 py-3 focus:ring-2 focus:ring-indigo-500 outline-none font-medium"
+              className="w-full md:w-auto bg-zinc-50 border border-zinc-200 rounded-xl px-4 py-3 focus:ring-2 focus:ring-zinc-900 outline-none font-medium"
             />
           </div>
 
@@ -456,7 +456,7 @@ export function ClientApp() {
           {selectedDate && (
             <div>
               <label className="block text-sm font-bold text-zinc-700 mb-3 flex items-center gap-2">
-                <Clock className="w-5 h-5 text-indigo-500" />
+                <Clock className="w-5 h-5 text-zinc-900" />
                 {isAr ? 'الأوقات المتاحة' : 'Available Times'}
               </label>
               
@@ -534,7 +534,7 @@ export function ClientApp() {
                     className={`p-4 rounded-[16px] border-2 transition-all cursor-pointer flex justify-between items-center ${isSelected ? 'border-zinc-900 bg-zinc-100' : 'border-zinc-100 hover:border-zinc-200 bg-white'}`}
                   >
                     <div>
-                      <h4 className={`font-bold ${isSelected ? 'text-indigo-900' : 'text-zinc-900'}`}>
+                      <h4 className={`font-bold ${isSelected ? 'text-zinc-900' : 'text-zinc-900'}`}>
                         {isAr ? service.name_ar : service.name_en}
                       </h4>
                     </div>
@@ -542,7 +542,7 @@ export function ClientApp() {
                       {service.discount_price ? (
                         <>
                           <span className="text-xs line-through opacity-50">{currSymbol} {service.original_price}</span>
-                          <span className="text-emerald-600">{currSymbol} {service.discount_price}</span>
+                          <span className="text-zinc-900">{currSymbol} {service.discount_price}</span>
                         </>
                       ) : (
                         <span>{currSymbol} {service.original_price}</span>
@@ -688,7 +688,7 @@ export function ClientApp() {
                 <div className="flex justify-between items-start mb-2">
                   <h4 className="text-lg font-bold text-zinc-900">{isAr ? salon.name_ar : salon.name_en}</h4>
                   {salon.computedDistance && salon.computedDistance !== Infinity ? (
-                    <span className="text-xs font-bold text-emerald-600 bg-emerald-50 px-2 py-1 rounded-full flex items-center gap-1">
+                    <span className="text-xs font-bold text-zinc-900 bg-zinc-100 px-2 py-1 rounded-full flex items-center gap-1">
                       <MapPin className="w-3 h-3" />
                       {salon.computedDistance.toFixed(1)} km
                     </span>

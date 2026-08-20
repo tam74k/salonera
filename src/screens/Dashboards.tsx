@@ -187,6 +187,11 @@ export function Dashboards() {
       if (salon) {
         
         setSalonData(salon);
+
+        if (!salon.name_ar || !salon.name_en) {
+          setActiveTab('settings');
+        }
+
         setEvoInstance(salon.evolution_instance || '');
         setEvoApiKey(salon.evolution_api_key || '');
         setSalonCountry(salon.country_id || salon.country || '');
@@ -544,7 +549,7 @@ export function Dashboards() {
                     
                     <div className="flex items-center gap-3 mt-2 md:mt-0">
                       {artistTab === 'today' && b.status === 'confirmed' && (
-                        <button onClick={(e) => { e.stopPropagation(); updateBookingStatus(b.id, 'completed', true); }} className="w-full md:w-auto px-6 py-3 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-sm font-semibold transition-colors flex items-center justify-center gap-2 shadow-sm shadow-emerald-600/20">
+                        <button onClick={(e) => { e.stopPropagation(); updateBookingStatus(b.id, 'completed', true); }} className="w-full md:w-auto px-6 py-3 bg-zinc-900 hover:bg-zinc-800 text-white rounded-xl text-sm font-semibold transition-colors flex items-center justify-center gap-2 shadow-sm shadow-zinc-900/20">
                           <CheckCircle2 className="w-4 h-4" />
                           {isAr ? 'تأكيد وصول العميل (مكتمل)' : 'Mark Arrived (Completed)'}
                         </button>
@@ -574,8 +579,8 @@ export function Dashboards() {
       {/* Sidebar */}
       <aside className="w-full md:w-64 shrink-0 space-y-2">
         <div className="p-4 bg-zinc-900 text-white rounded-[16px] mb-6">
-          <h3 className="font-bold">{isAr ? 'الإدارة' : 'Admin'}</h3>
-          <p className="text-xs text-zinc-400">{salonData ? (isAr ? salonData.name_ar : salonData.name_en) : '...'}</p>
+          <h3 className="font-bold">{salonData ? (isAr ? salonData.name_ar : salonData.name_en) : (isAr ? 'الإدارة' : 'Admin')}</h3>
+          <p className="text-xs text-zinc-400">{isAr ? 'لوحة الإدارة' : 'Admin Panel'}</p>
         </div>
         
         <NavButton icon={LayoutDashboard} label={t.dashboard} active={activeTab === 'dashboard'} onClick={() => setActiveTab('dashboard')} />
@@ -661,14 +666,14 @@ export function Dashboards() {
             placeholder={isAr ? 'بحث بالاسم، الجوال، كود الحجز' : 'Search by name, mobile, code'}
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="md:col-span-2 bg-zinc-50 border border-zinc-200 rounded-xl px-4 py-2.5 outline-none focus:ring-2 focus:ring-indigo-500"
+            className="md:col-span-2 bg-zinc-50 border border-zinc-200 rounded-xl px-4 py-2.5 outline-none focus:ring-2 focus:ring-zinc-900"
           />
           <input 
             type="date" 
-            className="bg-zinc-50 border border-zinc-200 rounded-xl px-4 py-2.5 outline-none focus:ring-2 focus:ring-indigo-500"
+            className="bg-zinc-50 border border-zinc-200 rounded-xl px-4 py-2.5 outline-none focus:ring-2 focus:ring-zinc-900"
             onChange={(e) => setSearchQuery(e.target.value)}
           />
-          <button className="flex items-center justify-center gap-2 bg-zinc-100 text-zinc-900 px-4 py-2.5 rounded-xl font-bold hover:bg-indigo-100 transition-colors" onClick={() => {
+          <button className="flex items-center justify-center gap-2 bg-zinc-100 text-zinc-900 px-4 py-2.5 rounded-xl font-bold hover:bg-zinc-200 transition-colors" onClick={() => {
               const code = prompt(isAr ? 'أدخل كود الحجز من الـ QR' : 'Enter QR Booking Code');
               if(code) setSearchQuery(code);
           }}>
@@ -686,7 +691,7 @@ export function Dashboards() {
               onClick={() => { setSelectedBookingForEdit(b); setShowBookingEditModal(true); }}
             >
               <div className="flex items-center gap-4">
-                <div className="w-12 h-12 bg-indigo-100 text-zinc-900 rounded-xl flex items-center justify-center font-bold text-lg shrink-0">
+                <div className="w-12 h-12 bg-zinc-100 text-zinc-900 rounded-xl flex items-center justify-center font-bold text-lg shrink-0">
                   #{b.id.substring(0, 4)}
                 </div>
                 <div>
@@ -701,8 +706,8 @@ export function Dashboards() {
                   onClick={(e) => e.stopPropagation()} onChange={(e) => updateBookingStatus(b.id, e.target.value)}
                   className={`px-4 py-2.5 rounded-xl font-bold text-sm border-0 outline-none w-full md:w-auto ${
                     b.status === 'pending' ? 'bg-amber-100 text-amber-700' : 
-                    b.status === 'confirmed' ? 'bg-emerald-100 text-emerald-700' : 
-                    b.status === 'completed' ? 'bg-indigo-100 text-zinc-900' : 
+                    b.status === 'confirmed' ? 'bg-zinc-100 text-zinc-800' : 
+                    b.status === 'completed' ? 'bg-zinc-100 text-zinc-900' : 
                     'bg-rose-100 text-rose-700'
                   }`}
                 >
@@ -727,7 +732,7 @@ export function Dashboards() {
               <section className="bg-white p-6 md:p-8 rounded-[24px] shadow-sm border border-zinc-100">
                 <div className="mb-6">
                   <h3 className="text-xl font-bold text-zinc-900 flex items-center gap-2">
-                    <MessageSquare className="w-5 h-5 text-emerald-500" />
+                    <MessageSquare className="w-5 h-5 text-zinc-900" />
                     {isAr ? 'إعدادات الصالون' : 'Salon Settings'}
                   </h3>
                 </div>
@@ -817,7 +822,7 @@ export function Dashboards() {
                           </button>
                         </div>
                       ) : (
-                        <div className="w-full h-32 bg-zinc-50 rounded-xl border border-dashed border-slate-300 flex items-center justify-center text-zinc-400 flex-col">
+                        <div className="relative w-full h-32 bg-zinc-50 rounded-xl border border-dashed border-slate-300 flex items-center justify-center text-zinc-400 flex-col hover:bg-zinc-100 transition-colors">
                           <ImageIcon className="w-6 h-6 mb-2" />
                           <span className="text-xs">{isAr ? 'اضغط لرفع صورة' : 'Click to upload'}</span>
                           <input 
@@ -894,7 +899,7 @@ export function Dashboards() {
                       {salonLat && salonLng ? `${salonLat.toFixed(4)}, ${salonLng.toFixed(4)}` : (isAr ? 'لم يتم تحديد الموقع بعد' : 'Location not set yet')}
                     </p>
                   </div>
-                  <button onClick={handleCaptureLocation} className="px-4 py-2 bg-indigo-100 text-zinc-900 rounded-lg text-sm font-bold hover:bg-indigo-200 transition-colors">
+                  <button onClick={handleCaptureLocation} className="px-4 py-2 bg-zinc-100 text-zinc-900 rounded-lg text-sm font-bold hover:bg-indigo-200 transition-colors">
                     {isAr ? 'تحديث الموقع الحالي' : 'Update to Current Location'}
                   </button>
                 </div>
@@ -916,7 +921,7 @@ export function Dashboards() {
                   </h3>
                   <button 
                     onClick={() => setShowAddService(!showAddService)}
-                    className="flex items-center gap-2 px-4 py-2 bg-zinc-100 text-zinc-900 rounded-xl font-semibold text-sm hover:bg-indigo-100 transition-colors"
+                    className="flex items-center gap-2 px-4 py-2 bg-zinc-100 text-zinc-900 rounded-xl font-semibold text-sm hover:bg-zinc-200 transition-colors"
                   >
                     {showAddService ? <XCircle className="w-4 h-4" /> : <PlusCircle className="w-4 h-4" />}
                     {isAr ? 'إضافة خدمة' : 'Add Service'}
@@ -936,21 +941,21 @@ export function Dashboards() {
                     <div className="grid md:grid-cols-3 gap-4 mt-4">
                       <div>
                         <label className="block text-sm font-medium text-zinc-700 mb-1.5">{t.original_price}</label>
-                        <input type="number" value={srvPrice} onChange={(e) => setSrvPrice(e.target.value)} className="w-full bg-white border border-zinc-200 rounded-xl px-4 py-2.5 focus:ring-2 focus:ring-indigo-500 outline-none transition-all" />
+                        <input type="number" value={srvPrice} onChange={(e) => setSrvPrice(e.target.value)} className="w-full bg-white border border-zinc-200 rounded-xl px-4 py-2.5 focus:ring-2 focus:ring-zinc-900 outline-none transition-all" />
                       </div>
                       <div>
                         <label className="block text-sm font-medium text-zinc-700 mb-1.5">{isAr ? 'السعر (بعد الخصم اختياري)' : 'Discount Price (Optional)'}</label>
-                        <input type="number" value={srvDiscountPrice} onChange={(e) => setSrvDiscountPrice(e.target.value)} className="w-full bg-white border border-zinc-200 rounded-xl px-4 py-2.5 focus:ring-2 focus:ring-indigo-500 outline-none transition-all" />
+                        <input type="number" value={srvDiscountPrice} onChange={(e) => setSrvDiscountPrice(e.target.value)} className="w-full bg-white border border-zinc-200 rounded-xl px-4 py-2.5 focus:ring-2 focus:ring-zinc-900 outline-none transition-all" />
                       </div>
                       <div>
                         <label className="block text-sm font-medium text-zinc-700 mb-1.5">{t.duration} (Minutes)</label>
-                        <input type="number" value={srvDuration} onChange={(e) => setSrvDuration(e.target.value)} className="w-full bg-white border border-zinc-200 rounded-xl px-4 py-2.5 focus:ring-2 focus:ring-indigo-500 outline-none transition-all" />
+                        <input type="number" value={srvDuration} onChange={(e) => setSrvDuration(e.target.value)} className="w-full bg-white border border-zinc-200 rounded-xl px-4 py-2.5 focus:ring-2 focus:ring-zinc-900 outline-none transition-all" />
                       </div>
                     </div>
                     <button 
                       onClick={handleSaveService}
                       disabled={isSavingSrv}
-                      className="mt-6 bg-zinc-900 text-white px-8 py-3 rounded-xl text-sm font-bold hover:bg-zinc-800 transition-colors w-full md:w-auto disabled:bg-indigo-400"
+                      className="mt-6 bg-zinc-900 text-white px-8 py-3 rounded-xl text-sm font-bold hover:bg-zinc-800 transition-colors w-full md:w-auto disabled:bg-zinc-400"
                     >
                       {isSavingSrv ? (isAr ? 'جاري الحفظ...' : 'Saving...') : (isAr ? 'حفظ الخدمة' : 'Save Service')}
                     </button>
@@ -961,7 +966,7 @@ export function Dashboards() {
                   {services.length === 0 ? (
                     <p className="text-zinc-500 col-span-full text-center py-8">{isAr ? 'لا يوجد خدمات مضافة' : 'No services added'}</p>
                   ) : services.map(s => (
-                    <div key={s.id} className="p-6 border border-zinc-100 rounded-[24px] bg-white flex flex-col justify-between shadow-sm hover:shadow-xl hover:shadow-indigo-900/5 hover:border-zinc-200 hover:-translate-y-1 transition-all">
+                    <div key={s.id} className="p-6 border border-zinc-100 rounded-[24px] bg-white flex flex-col justify-between shadow-sm hover:shadow-xl hover:shadow-zinc-900/5 hover:border-zinc-200 hover:-translate-y-1 transition-all">
                       <div>
                         <h4 className="font-bold text-zinc-900 text-lg">{isAr ? s.name_ar : s.name_en}</h4>
                         { (s.description_ar || s.description_en) && 
@@ -974,7 +979,7 @@ export function Dashboards() {
                             {s.discount_price ? (
                               <>
                                 <span className="text-xs text-zinc-400 line-through">{s.original_price} {currSymbol}</span>
-                                <span className="font-black text-emerald-600 text-lg">{s.discount_price} {currSymbol}</span>
+                                <span className="font-black text-zinc-900 text-lg">{s.discount_price} {currSymbol}</span>
                               </>
                             ) : (
                               <span className="font-black text-zinc-900 text-lg">{s.original_price} {currSymbol}</span>
@@ -998,7 +1003,7 @@ export function Dashboards() {
                   </h3>
                   <button 
                     onClick={() => setShowAddStaff(!showAddStaff)}
-                    className="flex items-center gap-2 px-4 py-2 bg-zinc-100 text-zinc-900 rounded-xl font-semibold text-sm hover:bg-indigo-100 transition-colors"
+                    className="flex items-center gap-2 px-4 py-2 bg-zinc-100 text-zinc-900 rounded-xl font-semibold text-sm hover:bg-zinc-200 transition-colors"
                   >
                     {showAddStaff ? <XCircle className="w-4 h-4" /> : <PlusCircle className="w-4 h-4" />}
                     {isAr ? 'إضافة موظف' : 'Add Staff'}
@@ -1038,7 +1043,7 @@ export function Dashboards() {
                               const url = await handleFileUpload(file, 'staff');
                               if (url) setNewArtistData({...newArtistData, avatar_url: url});
                             }
-                          }} className="w-full text-sm text-zinc-500 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-sm file:font-semibold file:bg-zinc-100 file:text-zinc-900 hover:file:bg-indigo-100 cursor-pointer" />
+                          }} className="w-full text-sm text-zinc-500 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-sm file:font-semibold file:bg-zinc-100 file:text-zinc-900 hover:file:bg-zinc-100 cursor-pointer" />
                         </div>
                       </div>
                       <div className="md:col-span-2 grid md:grid-cols-2 gap-4 mt-2">
@@ -1068,8 +1073,8 @@ export function Dashboards() {
                   {staffList.length === 0 ? (
                     <p className="text-zinc-500 col-span-full text-center py-8">{isAr ? 'لا يوجد موظفين مضافين' : 'No staff added'}</p>
                   ) : staffList.map(st => (
-                    <div key={st.id} className="p-6 border border-zinc-100 rounded-[24px] bg-white flex items-center gap-4 shadow-sm hover:shadow-xl hover:shadow-indigo-900/5 hover:border-zinc-200 hover:-translate-y-1 transition-all">
-                      <div className="w-14 h-14 bg-gradient-to-br from-indigo-100 to-indigo-50 text-zinc-900 rounded-[16px] flex items-center justify-center font-bold text-xl shrink-0 shadow-inner">
+                    <div key={st.id} className="p-6 border border-zinc-100 rounded-[24px] bg-white flex items-center gap-4 shadow-sm hover:shadow-xl hover:shadow-zinc-900/5 hover:border-zinc-200 hover:-translate-y-1 transition-all">
+                      <div className="w-14 h-14 bg-gradient-to-br from-zinc-200 to-zinc-100 text-zinc-900 rounded-[16px] flex items-center justify-center font-bold text-xl shrink-0 shadow-inner">
                         {st.profile?.first_name_en?.[0] || st.profile?.first_name_ar?.[0] || <Users className="w-6 h-6" />}
                       </div>
                       <div className="flex-1 min-w-0">
@@ -1212,7 +1217,7 @@ function StatusBadge({ status, isAr }: { status: string, isAr: boolean }) {
   switch(status) {
     case 'pending': return <span className="text-xs font-bold bg-amber-100 text-amber-700 px-2 py-1 rounded-md">{isAr ? 'قيد الانتظار' : 'Pending'}</span>;
     case 'confirmed': return <span className="text-xs font-bold bg-blue-100 text-blue-700 px-2 py-1 rounded-md">{isAr ? 'مؤكد' : 'Confirmed'}</span>;
-    case 'completed': return <span className="text-xs font-bold bg-emerald-100 text-emerald-700 px-2 py-1 rounded-md">{isAr ? 'مكتمل' : 'Completed'}</span>;
+    case 'completed': return <span className="text-xs font-bold bg-zinc-100 text-zinc-800 px-2 py-1 rounded-md">{isAr ? 'مكتمل' : 'Completed'}</span>;
     case 'canceled': return <span className="text-xs font-bold bg-red-100 text-red-700 px-2 py-1 rounded-md">{isAr ? 'ملغي' : 'Canceled'}</span>;
     default: return null;
   }

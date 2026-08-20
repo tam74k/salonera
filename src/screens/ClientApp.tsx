@@ -7,6 +7,7 @@ import { QRCodeSVG } from 'qrcode.react';
 import { generateAvailableSlots } from '../lib/booking-utils';
 import { supabase } from '../lib/supabase';
 import { sendWhatsAppMessage } from '../lib/whatsapp';
+import { getCurrencySymbol } from '../lib/currency';
 
 type BookingStep = 'salons' | 'services' | 'datetime' | 'confirmed' | 'my-bookings';
 
@@ -227,7 +228,7 @@ export function ClientApp() {
     return sum + (dPrice > 0 ? dPrice : (oPrice || 0));
   }, 0);
 
-  const currSymbol = selectedSalon?.country ? (isAr ? selectedSalon.country.currency_ar : selectedSalon.country.currency_en) : (isAr ? 'ر.س' : 'SAR');
+  const currSymbol = getCurrencySymbol(selectedSalon?.currency, isAr);
 
   const handleNextToDateTime = () => {
     setStep('datetime');

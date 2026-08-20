@@ -6,6 +6,7 @@ import { X, CheckCircle2, Image as ImageIcon, Clock, PlusCircle, Settings, Users
 import { AdminInput } from '../components/AdminInput';
 import { Scanner } from '@yudiel/react-qr-scanner';
 import { sendWhatsAppMessage } from '../lib/whatsapp';
+import { getCurrencySymbol, CURRENCIES } from '../lib/currency';
 import { supabase } from '../lib/supabase';
 
 
@@ -214,6 +215,7 @@ export function Dashboards() {
           working_hours_end: salon.working_hours_end || '22:00',
           images: salon.images || [],
           salon_type: salon.type || 'both',
+          currency: salon.currency || 'SAR',
           instagram: salon.social_media?.instagram || '',
           facebook: salon.social_media?.facebook || '',
           tiktok: salon.social_media?.tiktok || '',
@@ -369,7 +371,8 @@ export function Dashboards() {
       whatsapp: salonSettingsData.whatsapp,
       working_hours_start: salonSettingsData.working_hours_start,
       working_hours_end: salonSettingsData.working_hours_end,
-      salon_type: salonSettingsData.salon_type,
+      type: salonSettingsData.salon_type,
+      currency: salonSettingsData.currency,
       images: salonSettingsData.images,
       social_media: {
         instagram: salonSettingsData.instagram,
@@ -381,6 +384,9 @@ export function Dashboards() {
     setIsSavingSettings(false);
     if (!error) {
       alert(isAr ? 'تم الحفظ بنجاح' : 'Saved successfully');
+    } else {
+      console.error(error);
+      alert(isAr ? 'حدث خطأ أثناء الحفظ' : 'Error saving settings');
     }
   };
 
@@ -571,8 +577,7 @@ export function Dashboards() {
   }
 
 
-  const currCountry = countriesList.find(c => c.id === (salonData?.country_id || salonData?.country));
-  const currSymbol = currCountry ? (isAr ? currCountry.currency_ar : currCountry.currency_en) : (isAr ? 'ر.س' : 'SAR');
+  const currSymbol = getCurrencySymbol(salonData?.currency, isAr);
   // Admin / Cashier Dashboard View
   return (
     <div className="max-w-7xl mx-auto p-4 md:p-8 flex flex-col md:flex-row gap-8 pb-24">
@@ -769,6 +774,14 @@ export function Dashboards() {
                       <option value="both">{isAr ? 'رجالي ونسائي (Both)' : 'Both'}</option>
                       <option value="men">{isAr ? 'رجالي (Men)' : 'Men'}</option>
                       <option value="women">{isAr ? 'نسائي (Women)' : 'Women'}</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-zinc-700 mb-1.5">{isAr ? 'العملة' : 'Currency'}</label>
+                    <select value={salonSettingsData.currency || 'SAR'} onChange={e => setSalonSettingsData({...salonSettingsData, currency: e.target.value})} className="w-full bg-zinc-50 border border-zinc-200 rounded-xl px-4 py-2.5 outline-none font-medium" dir="ltr">
+                      {Object.keys(CURRENCIES).map(code => (
+                        <option key={code} value={code}>{code} - {isAr ? CURRENCIES[code].ar : CURRENCIES[code].en}</option>
+                      ))}
                     </select>
                   </div>
                 </div>

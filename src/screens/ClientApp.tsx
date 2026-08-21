@@ -576,6 +576,109 @@ export function ClientApp() {
     );
   }
 
+  const handleCancelBooking = async (bookingId: string) => {
+    if (!window.confirm(isAr ? 'هل أنت متأكد من إلغاء هذا الحجز؟' : 'Are you sure you want to cancel this booking?')) return;
+    try {
+      const { error } = await supabase.from('bookings').update({ status: 'cancelled' }).eq('id', bookingId);
+      if (error) throw error;
+      setMyBookings(prev => prev.map(b => b.id === bookingId ? { ...b, status: 'cancelled' } : b));
+      alert(isAr ? 'تم إلغاء الحجز بنجاح' : 'Booking cancelled successfully');
+    } catch (err) {
+      console.error(err);
+      alert(isAr ? 'حدث خطأ أثناء الإلغاء' : 'Error cancelling booking');
+    }
+  };
+
+  if (step === 'my-bookings') {
+    const now = new Date();
+    now.setHours(0,0,0,0);
+    const today = now.toISOString().split('T')[0];
+    const currentDateTime = new Date();
+
+    const filteredBookings = myBookings.filter(b => {
+      if (bookingFilter === 'cancelled') return b.status === 'cancelled';
+      if (b.status === 'cancelled') return false; 
+      
+      const isPast = b.booking_date < today || b.status === 'completed';
+      if (bookingFilter === 'past') return isPast;
+      if (bookingFilter === 'current') return !isPast;
+      return true;
+    });
+
+    return (
+      <div className="max-w-3xl mx-auto p-4 md:p-8 space-y-6">
+        <button onClick={() => setStep('salons')} className="flex items-center gap-2 text-zinc-500 hover:text-zinc-900 transition-colors font-medium">
+          {isAr ? <ArrowRight className="w-4 h-4" /> : <ArrowLeft className="w-4 h-4" />}
+          {isAr ? 'العودة للصالونات' : 'Back to Salons'}
+        </button>
+
+        <h2 className="text-3xl font-bold text-zinc-900 mb-6">{isAr ? 'حجوزاتي' : 'My Bookings'}</h2>
+
+        <div className="flex bg-zinc-100 p-1.5 rounded-xl mb-6">
+          <button onClick={() => setBookingFilter('current')} className={`flex-1 py-2 text-sm font-bold rounded-lg transition-colors ${bookingFilter === 'current' ? 'bg-white text-zinc-900 shadow-sm' : 'text-zinc-500 hover:text-zinc-900'}`}>
+            {isAr ? 'الحالية' : 'Current'}
+          </button>
+          <button onClick={() => setBookingFilter('past')} className={`flex-1 py-2 text-sm font-bold rounded-lg transition-colors ${bookingFilter === 'past' ? 'bg-white text-zinc-900 shadow-sm' : 'text-zinc-500 hover:text-zinc-900'}`}>
+            {isAr ? 'السابقة' : 'Past'}
+          </button>
+          <button onClick={() => setBookingFilter('cancelled')} className={`flex-1 py-2 text-sm font-bold rounded-lg transition-colors ${bookingFilter === 'cancelled' ? 'bg-white text-zinc-900 shadow-sm' : 'text-zinc-500 hover:text-zinc-900'}`}>
+            {isAr ? 'الملغية' : 'Cancelled'}
+          </button>
+        </div>
+
+        <div className="space-y-4">
+          {filteredBookings.length === 0 ? (
+            <div className="text-center py-12 text-zinc-500 font-medium">
+              {isAr ? 'لا توجد حجوزات.' : 'No bookings found.'}
+            </div>
+          ) : (
+            filteredBookings.map(b => {
+              const bookingDateTimeStr = `${b.booking_date}T${b.booking_time}`;
+              const bookingDateObj = new Date(bookingDateTimeStr);
+              const diffMs = bookingDateObj.getTime() - currentDateTime.getTime();
+              const hoursDiff = diffMs / (1000 * 60 * 60);
+              const canCancel = (b.status === 'pending' || b.status === 'confirmed') && hoursDiff >= 24;
+
+              return (
+                <div key={b.id} className="bg-white p-6 rounded-[24px] border border-zinc-100 shadow-sm flex flex-col md:flex-row gap-4 justify-between">
+                  <div>
+                    <h3 className="font-bold text-lg text-zinc-900 mb-1">{isAr ? b.salon?.name_ar : b.salon?.name_en}</h3>
+                    <div className="text-sm font-medium text-zinc-500 mb-2">
+                      {b.booking_date} • {b.booking_time.substring(0,5)}
+                    </div>
+                    <div className="flex flex-wrap gap-2">
+                      {b.details?.map((d: any, idx: number) => (
+                        <span key={idx} className="bg-zinc-100 text-zinc-700 text-xs px-2 py-1 rounded-md font-medium">
+                          {isAr ? d.services?.name_ar : d.services?.name_en}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                  <div className="flex flex-col justify-between items-end gap-3">
+                    <span className={`text-xs font-bold px-3 py-1 rounded-full ${b.status === 'cancelled' ? 'bg-rose-100 text-rose-700' : b.status === 'completed' ? 'bg-emerald-100 text-emerald-700' : b.status === 'pending' ? 'bg-amber-100 text-amber-700' : 'bg-blue-100 text-blue-700'}`}>
+                      {isAr ? (b.status === 'cancelled' ? 'ملغي' : b.status === 'completed' ? 'مكتمل' : b.status === 'pending' ? 'قيد الانتظار' : 'مؤكد') : (b.status === 'cancelled' ? 'Cancelled' : b.status === 'completed' ? 'Completed' : b.status === 'pending' ? 'Pending' : 'Confirmed')}
+                    </span>
+                    {b.status === 'confirmed' && (
+                       <span className="text-xs text-zinc-400 font-mono">ID: {b.id.substring(0,8)}</span>
+                    )}
+                    {canCancel && (
+                      <button 
+                        onClick={() => handleCancelBooking(b.id)}
+                        className="text-xs font-bold px-3 py-1.5 rounded-lg bg-rose-50 text-rose-600 hover:bg-rose-100 transition-colors border border-rose-100 mt-2 md:mt-0"
+                      >
+                        {isAr ? 'إلغاء الحجز' : 'Cancel Booking'}
+                      </button>
+                    )}
+                  </div>
+                </div>
+              );
+            })
+          )}
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="max-w-5xl mx-auto p-4 md:p-8 space-y-8 pb-24">
       {/* Hero Section */}

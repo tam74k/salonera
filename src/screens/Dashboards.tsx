@@ -55,6 +55,9 @@ export function Dashboards() {
   // Staff form
   const [staffIdentifier, setStaffIdentifier] = useState('');
   const [staffRole, setStaffRole] = useState('artist');
+  const [selectedStaffForEdit, setSelectedStaffForEdit] = useState<any>(null);
+  const [showStaffEditModal, setShowStaffEditModal] = useState(false);
+  const [isUpdatingStaff, setIsUpdatingStaff] = useState(false);
   const [isSavingStaff, setIsSavingStaff] = useState(false);
 
   // Settings form
@@ -339,6 +342,9 @@ export function Dashboards() {
       if (error) {
         alert(error.message);
       } else {
+        if (data) {
+           await supabase.from('profiles').update({ role: staffRole }).eq('id', data);
+        }
         setShowAddStaff(false);
         setNewArtistData({ email: '', mobile: '', first_name_ar: '', first_name_en: '', password: '123456', avatar_url: '' });
         fetchSalonAndBookings();
@@ -348,6 +354,55 @@ export function Dashboards() {
     }
     setIsSavingStaff(false);
   };
+
+  const handleUpdateStaff = async () => {
+    if (!selectedStaffForEdit) return;
+    setIsUpdatingStaff(true);
+    try {
+      // Update profile
+      await supabase.from('profiles').update({
+        first_name_ar: selectedStaffForEdit.profile?.first_name_ar,
+        first_name_en: selectedStaffForEdit.profile?.first_name_en,
+        mobile: selectedStaffForEdit.profile?.mobile,
+        role: selectedStaffForEdit.profile?.role
+      }).eq('id', selectedStaffForEdit.profile_id);
+
+      // Update staff details
+      await supabase.from('staff').update({
+        bio_ar: selectedStaffForEdit.bio_ar,
+        bio_en: selectedStaffForEdit.bio_en,
+        is_available: selectedStaffForEdit.is_available
+      }).eq('id', selectedStaffForEdit.id);
+
+      setShowStaffEditModal(false);
+      fetchSalonAndBookings();
+      alert(isAr ? 'تم حفظ التعديلات بنجاح' : 'Changes saved successfully');
+    } catch (e) {
+      console.error(e);
+      alert(isAr ? 'حدث خطأ أثناء الحفظ' : 'Error saving changes');
+    }
+    setIsUpdatingStaff(false);
+  };
+
+  const handleDeleteStaff = async () => {
+    if (!selectedStaffForEdit) return;
+    if (!window.confirm(isAr ? 'هل أنت متأكد من حذف هذا الموظف؟ قد لا تتمكن من حذفه إذا كانت لديه حجوزات سابقة.' : 'Are you sure you want to delete this staff member? Note that deletion might fail if they have associated bookings.')) return;
+    
+    setIsUpdatingStaff(true);
+    try {
+      const { error } = await supabase.from('staff').delete().eq('id', selectedStaffForEdit.id);
+      if (error) {
+         alert(isAr ? 'لا يمكن حذف الموظف لوجود بيانات مرتبطة به (قم بتعطيله بدلاً من حذفه).' : 'Cannot delete staff due to related records (try disabling them instead).');
+      } else {
+         setShowStaffEditModal(false);
+         fetchSalonAndBookings();
+      }
+    } catch (e) {
+       console.error(e);
+    }
+    setIsUpdatingStaff(false);
+  };
+
 
   const handleSaveSettings = async () => {
     if (!salonData) return;
@@ -1053,6 +1108,14 @@ export function Dashboards() {
                     </div>
                     <div className="grid md:grid-cols-2 gap-4">
                       <div>
+                        <label className="block text-sm font-medium text-zinc-700 mb-1.5">{isAr ? 'الدور الوظيفي' : 'Role'}</label>
+                        <select value={staffRole} onChange={e => setStaffRole(e.target.value)} className="w-full bg-white border border-zinc-200 rounded-xl px-4 py-2.5 outline-none font-medium">
+                          <option value="artist">{isAr ? 'فني (يقدم خدمات)' : 'Artist (Provides services)'}</option>
+                          <option value="cashier">{isAr ? 'كاشير' : 'Cashier'}</option>
+                          <option value="admin">{isAr ? 'مشرف (أدمن)' : 'Admin'}</option>
+                        </select>
+                      </div>
+                      <div>
                         <label className="block text-sm font-medium text-zinc-700 mb-1.5">{isAr ? 'البريد الإلكتروني' : 'Email'}</label>
                         <input type="email" value={newArtistData.email} onChange={(e) => setNewArtistData({...newArtistData, email: e.target.value})} className="w-full bg-white border border-zinc-200 rounded-xl px-4 py-2.5" />
                       </div>
@@ -1104,7 +1167,13 @@ export function Dashboards() {
                   {staffList.length === 0 ? (
                     <p className="text-zinc-500 col-span-full text-center py-8">{isAr ? 'لا يوجد موظفين مضافين' : 'No staff added'}</p>
                   ) : staffList.map(st => (
-                    <div key={st.id} className="p-6 border border-zinc-100 rounded-[24px] bg-white flex items-center gap-4 shadow-sm hover:shadow-xl hover:shadow-zinc-900/5 hover:border-zinc-200 hover:-translate-y-1 transition-all">
+                    <div key={st.id} 
+                      onClick={() => { setSelectedStaffForEdit(st); setShowStaffEditModal(true); }}
+                      className="p-6 border border-zinc-100 rounded-[24px] bg-white flex items-center gap-4 shadow-sm hover:shadow-xl hover:shadow-zinc-900/5 hover:border-zinc-200 hover:-translate-y-1 transition-all cursor-pointer relative"
+                    >
+                      {!st.is_available && (
+                         <span className="absolute top-2 left-2 bg-rose-100 text-rose-700 text-[10px] font-bold px-2 py-0.5 rounded-md">{isAr ? 'معطل' : 'Disabled'}</span>
+                      )}
                       <div className="w-14 h-14 bg-gradient-to-br from-zinc-200 to-zinc-100 text-zinc-900 rounded-[16px] flex items-center justify-center font-bold text-xl shrink-0 shadow-inner">
                         {st.profile?.first_name_en?.[0] || st.profile?.first_name_ar?.[0] || <Users className="w-6 h-6" />}
                       </div>
@@ -1125,6 +1194,108 @@ export function Dashboards() {
           </>
         )}
       
+        {/* Staff Edit Modal */}
+        <AnimatePresence>
+          {showStaffEditModal && selectedStaffForEdit && (
+            <motion.div 
+              initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+              className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-zinc-900/40 backdrop-blur-sm"
+              onClick={() => setShowStaffEditModal(false)}
+            >
+              <motion.div 
+                initial={{ opacity: 0, scale: 0.95, y: 20 }}
+                animate={{ opacity: 1, scale: 1, y: 0 }}
+                exit={{ opacity: 0, scale: 0.95, y: 20 }}
+                onClick={e => e.stopPropagation()}
+                className="bg-white rounded-[24px] shadow-2xl w-full max-w-2xl overflow-hidden flex flex-col max-h-[90vh]"
+              >
+                <div className="p-6 border-b border-zinc-100 flex justify-between items-center bg-zinc-50/50">
+                  <h2 className="text-xl font-bold text-zinc-900">
+                    {isAr ? 'بطاقة الموظف' : 'Staff Card'}
+                  </h2>
+                  <button onClick={() => setShowStaffEditModal(false)} className="p-2 text-zinc-400 hover:text-zinc-600 hover:bg-zinc-100 rounded-full transition-colors">
+                    <X className="w-5 h-5" />
+                  </button>
+                </div>
+                
+                <div className="p-6 overflow-y-auto space-y-6">
+                  <div className="grid md:grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium text-zinc-700 mb-1.5">{isAr ? 'الاسم الأول (عربي)' : 'First Name (Ar)'}</label>
+                      <input type="text" value={selectedStaffForEdit.profile?.first_name_ar || ''} onChange={(e) => setSelectedStaffForEdit({...selectedStaffForEdit, profile: {...selectedStaffForEdit.profile, first_name_ar: e.target.value}})} className="w-full bg-white border border-zinc-200 rounded-xl px-4 py-2.5" />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-zinc-700 mb-1.5">{isAr ? 'الاسم الأول (إنجليزي)' : 'First Name (En)'}</label>
+                      <input type="text" value={selectedStaffForEdit.profile?.first_name_en || ''} onChange={(e) => setSelectedStaffForEdit({...selectedStaffForEdit, profile: {...selectedStaffForEdit.profile, first_name_en: e.target.value}})} className="w-full bg-white border border-zinc-200 rounded-xl px-4 py-2.5" />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-zinc-700 mb-1.5">{isAr ? 'الدور الوظيفي' : 'Role'}</label>
+                      <select value={selectedStaffForEdit.profile?.role || 'artist'} onChange={e => setSelectedStaffForEdit({...selectedStaffForEdit, profile: {...selectedStaffForEdit.profile, role: e.target.value}})} className="w-full bg-white border border-zinc-200 rounded-xl px-4 py-2.5 outline-none font-medium">
+                        <option value="artist">{isAr ? 'فني (يقدم خدمات)' : 'Artist'}</option>
+                        <option value="cashier">{isAr ? 'كاشير' : 'Cashier'}</option>
+                        <option value="admin">{isAr ? 'مشرف (أدمن)' : 'Admin'}</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-zinc-700 mb-1.5">{isAr ? 'رقم الجوال' : 'Mobile'}</label>
+                      <input type="tel" value={selectedStaffForEdit.profile?.mobile || ''} onChange={(e) => setSelectedStaffForEdit({...selectedStaffForEdit, profile: {...selectedStaffForEdit.profile, mobile: e.target.value}})} className="w-full bg-white border border-zinc-200 rounded-xl px-4 py-2.5 text-left" dir="ltr" />
+                    </div>
+                    
+                    <div className="md:col-span-2">
+                      <label className="flex items-center gap-3 p-4 border border-zinc-200 rounded-xl cursor-pointer hover:bg-zinc-50 transition-colors">
+                        <input type="checkbox" checked={selectedStaffForEdit.is_available} onChange={(e) => setSelectedStaffForEdit({...selectedStaffForEdit, is_available: e.target.checked})} className="w-5 h-5 accent-zinc-900 rounded" />
+                        <div>
+                          <p className="font-bold text-zinc-900">{isAr ? 'مفعل (نشط)' : 'Active (Available)'}</p>
+                          <p className="text-sm text-zinc-500">{isAr ? 'قم بإلغاء التحديد لتعطيل الموظف مؤقتاً' : 'Uncheck to temporarily suspend this staff member'}</p>
+                        </div>
+                      </label>
+                    </div>
+
+                    <div className="md:col-span-2 grid md:grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-sm font-medium text-zinc-700 mb-1.5">{isAr ? 'نبذة (عربي)' : 'Bio (Arabic)'}</label>
+                        <textarea rows={3} value={selectedStaffForEdit.bio_ar || ''} onChange={e => setSelectedStaffForEdit({...selectedStaffForEdit, bio_ar: e.target.value})} className="w-full bg-white border border-zinc-200 rounded-xl px-4 py-2.5 outline-none"></textarea>
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-zinc-700 mb-1.5">{isAr ? 'نبذة (إنجليزي)' : 'Bio (English)'}</label>
+                        <textarea rows={3} value={selectedStaffForEdit.bio_en || ''} onChange={e => setSelectedStaffForEdit({...selectedStaffForEdit, bio_en: e.target.value})} className="w-full bg-white border border-zinc-200 rounded-xl px-4 py-2.5 outline-none"></textarea>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="p-6 border-t border-zinc-100 bg-zinc-50/50 flex flex-col md:flex-row gap-4 justify-between items-center">
+                  <div className="flex gap-2 w-full md:w-auto">
+                    <button 
+                      disabled={isUpdatingStaff}
+                      onClick={handleDeleteStaff}
+                      className="flex-1 md:flex-none px-6 py-2.5 bg-rose-100 text-rose-700 rounded-xl font-bold hover:bg-rose-200 transition-colors"
+                    >
+                      {isAr ? 'حذف نهائياً' : 'Delete'}
+                    </button>
+                  </div>
+                  <div className="flex gap-2 w-full md:w-auto">
+                    <button 
+                      onClick={() => setShowStaffEditModal(false)}
+                      className="flex-1 md:flex-none px-6 py-2.5 bg-white border border-zinc-200 text-zinc-700 rounded-xl font-bold hover:bg-zinc-50 transition-colors"
+                    >
+                      {isAr ? 'إلغاء' : 'Cancel'}
+                    </button>
+                    <button 
+                      disabled={isUpdatingStaff}
+                      onClick={handleUpdateStaff}
+                      className="flex-1 md:flex-none px-6 py-2.5 bg-zinc-900 text-white rounded-xl font-bold hover:bg-zinc-800 transition-colors disabled:bg-slate-400"
+                    >
+                      {isUpdatingStaff ? (isAr ? 'جاري الحفظ...' : 'Saving...') : (isAr ? 'حفظ التعديلات' : 'Save Changes')}
+                    </button>
+                  </div>
+                </div>
+
+              </motion.div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
         {/* Booking Details Modal */}
         <AnimatePresence>
           {showBookingEditModal && selectedBookingForEdit && (

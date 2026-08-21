@@ -349,7 +349,7 @@ export function ClientApp() {
   }, [selectedDate, selectedStaff, step]);
 
   const fetchBookedTimes = async () => {
-    let query = supabase.from('bookings')
+    let bookingsQuery = supabase.from('bookings')
       .select('booking_time, total_amount')
       .eq('salon_id', selectedSalon.id)
       .eq('booking_date', selectedDate)
@@ -357,22 +357,66 @@ export function ClientApp() {
       .neq('status', 'cancelled');
       
     if (selectedStaff) {
-      query = query.eq('staff_id', selectedStaff);
+      bookingsQuery = bookingsQuery.eq('staff_id', selectedStaff);
     }
     
-    const { data } = await query;
-    if (data) {
-      const fullDayOff = data.find(b => b.total_amount === -1 && b.booking_time.startsWith('00:00'));
+    let blockedQuery = supabase.from('blocked_times')
+      .select('start_datetime, end_datetime')
+      .eq('salon_id', selectedSalon.id);
+
+    if (selectedStaff) {
+      blockedQuery = blockedQuery.or(`staff_id.is.null,staff_id.eq.${selectedStaff}`);
+    } else {
+      blockedQuery = blockedQuery.is('staff_id', null);
+    }
+
+    const [bRes, btRes] = await Promise.all([bookingsQuery, blockedQuery]);
+    
+    const formattedTimes: string[] = [];
+    
+    // 1. Process Bookings
+    if (bRes.data) {
+      const fullDayOff = bRes.data.find(b => b.total_amount === -1 && b.booking_time.startsWith('00:00'));
       if (fullDayOff) {
         setBookedTimes(['FULL_DAY_OFF']);
         return;
       }
-      // time in PG is usually 'HH:MM:SS', we need 'HH:MM'
-      const formattedTimes = data.map(b => b.booking_time.substring(0, 5));
-      setBookedTimes(formattedTimes);
-    } else {
-      setBookedTimes([]);
+      formattedTimes.push(...bRes.data.map(b => b.booking_time.substring(0, 5)));
     }
+    
+    // 2. Process Blocked Times
+    if (btRes.data) {
+      const selectedDateStart = new Date(`${selectedDate}T00:00:00.000Z`);
+      const selectedDateEnd = new Date(`${selectedDate}T23:59:59.999Z`);
+      
+      for (const bt of btRes.data) {
+         const start = new Date(bt.start_datetime);
+         const end = new Date(bt.end_datetime);
+         
+         // Check if this block intersects with the selected date
+         if (start <= selectedDateEnd && end >= selectedDateStart) {
+            // If it's a full day block (00:00 to 23:59)
+            if (start.getUTCHours() === 0 && end.getUTCHours() === 23) {
+               setBookedTimes(['FULL_DAY_OFF']);
+               return;
+            }
+            
+            // Otherwise, we need to block specific slots (every 30 mins)
+            // Get local hours of start and end, and block those slots
+            let current = new Date(Math.max(start.getTime(), selectedDateStart.getTime()));
+            const blockEnd = new Date(Math.min(end.getTime(), selectedDateEnd.getTime()));
+            
+            while (current < blockEnd) {
+               const hh = current.getHours().toString().padStart(2, '0');
+               const mm = current.getMinutes().toString().padStart(2, '0');
+               formattedTimes.push(`${hh}:${mm}`);
+               current.setMinutes(current.getMinutes() + 30);
+            }
+         }
+      }
+    }
+    
+    setBookedTimes(formattedTimes);
   };
 
   const handleBook = async () => {
@@ -582,15 +626,27 @@ export function ClientApp() {
           <div className="bg-zinc-50 rounded-[16px] p-6 mb-8 inline-block text-left w-full max-w-sm" dir={isAr ? 'rtl' : 'ltr'}>
             <div className="flex justify-between items-center mb-4 pb-4 border-b border-zinc-200">
               <span className="text-zinc-500 font-medium">{isAr ? 'رقم الحجز' : 'Booking ID'}</span>
-              <span className="font-bold text-zinc-900">{bookingConfirmed}</span>
+              <span className="font-bold text-zinc-900 uppercase">{bookingConfirmed.split('-')[0]}</span>
             </div>
             <div className="flex justify-between items-center mb-4 pb-4 border-b border-zinc-200">
               <span className="text-zinc-500 font-medium">{isAr ? 'الوقت والتاريخ' : 'Date & Time'}</span>
               <span className="font-bold text-zinc-900">{selectedDate} / {selectedTime}</span>
             </div>
-            <div className="flex justify-between items-center mb-4 pb-4 border-b border-zinc-200">
-              <span className="text-zinc-500 font-medium">{isAr ? 'عدد الخدمات' : 'Services Count'}</span>
-              <span className="font-bold text-zinc-900">{selectedServices.length}</span>
+            <div className="flex flex-col mb-4 pb-4 border-b border-zinc-200 gap-2">
+              <div className="flex justify-between items-center">
+                <span className="text-zinc-500 font-medium">{isAr ? 'الخدمات المحجوزة' : 'Booked Services'}</span>
+                <span className="text-xs font-bold bg-zinc-100 px-2 py-1 rounded-md">{selectedServices.length}</span>
+              </div>
+              <div className="space-y-1 mt-1">
+                {selectedServices.map(srvId => {
+                  const srv = services.find(s => s.id === srvId);
+                  return srv ? (
+                    <div key={srvId} className="flex justify-between text-sm">
+                      <span className="font-semibold text-zinc-800">{isAr ? srv.name_ar : srv.name_en}</span>
+                    </div>
+                  ) : null;
+                })}
+              </div>
             </div>
             <div className="flex justify-between items-center">
               <span className="text-zinc-500 font-medium">{isAr ? 'الإجمالي' : 'Total Amount'}</span>
@@ -689,7 +745,7 @@ export function ClientApp() {
                       onClick={() => setSelectedTime(slot.time)}
                       className={`py-3 rounded-xl font-bold transition-colors ${
                         !slot.available 
-                          ? 'bg-slate-200 text-zinc-400 cursor-not-allowed line-through'
+                          ? 'opacity-50 cursor-not-allowed bg-zinc-100 text-zinc-400'
                           : selectedTime === slot.time 
                             ? 'bg-zinc-900 text-white shadow-md' 
                             : 'bg-zinc-50 text-zinc-700 hover:bg-slate-100'

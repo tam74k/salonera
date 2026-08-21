@@ -739,7 +739,7 @@ export function Dashboards() {
     // Process Active vs Archive
     const processedBookings = bookings.filter(b => {
       if (bookingViewTab === 'active') {
-        if (b.status === 'completed' || b.status === 'cancelled') return false;
+        if (b.status === 'completed' || b.status === 'canceled') return false;
         if (!searchQuery && b.booking_date !== todayStr) return false;
       } else {
         if (b.status === 'pending' || b.status === 'confirmed') return false;
@@ -848,7 +848,7 @@ export function Dashboards() {
                   <option value="pending">{t.pending}</option>
                   <option value="confirmed">{t.confirmed}</option>
                   <option value="completed">{t.completed}</option>
-                  <option value="cancelled">{t.cancelled}</option>
+                  <option value="canceled">{t.canceled}</option>
                 </select>
               </div>
             </div>
@@ -1585,7 +1585,7 @@ export function Dashboards() {
                           <option value="pending">{t.pending}</option>
                           <option value="confirmed">{t.confirmed}</option>
                           <option value="completed">{t.completed}</option>
-                          <option value="cancelled">{t.cancelled}</option>
+                          <option value="canceled">{t.canceled}</option>
                         </select>
                         <button 
                           onClick={() => setShowBookingEditModal(false)}

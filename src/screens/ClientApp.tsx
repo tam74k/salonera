@@ -464,8 +464,107 @@ export function ClientApp() {
     );
   }, [selectedSalon, selectedDate, bookedTimes]);
 
+
+  const overlays = (
+    <>
+      {/* Preview Modal */}
+      <AnimatePresence>
+        {previewBooking && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-zinc-900/50 backdrop-blur-sm"
+          >
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 20 }}
+              className="bg-white rounded-3xl w-full max-w-md overflow-hidden shadow-xl"
+            >
+              <div className="p-6 border-b border-zinc-100 flex justify-between items-center">
+                <h3 className="font-bold text-xl text-zinc-900">{isAr ? 'تفاصيل الحجز' : 'Booking Details'}</h3>
+                <button onClick={() => setPreviewBooking(null)} className="p-2 bg-zinc-50 rounded-full text-zinc-400 hover:text-zinc-700 transition-colors">
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+              <div className="p-6 space-y-6">
+                <div>
+                  <h4 className="text-zinc-500 text-sm font-medium mb-1">{isAr ? 'الصالون' : 'Salon'}</h4>
+                  <p className="font-bold text-zinc-900 text-lg">{isAr ? previewBooking.salon?.name_ar : previewBooking.salon?.name_en}</p>
+                </div>
+                <div className="flex justify-between">
+                  <div>
+                    <h4 className="text-zinc-500 text-sm font-medium mb-1">{isAr ? 'التاريخ' : 'Date'}</h4>
+                    <p className="font-bold text-zinc-900">{previewBooking.booking_date}</p>
+                  </div>
+                  <div className="text-right">
+                    <h4 className="text-zinc-500 text-sm font-medium mb-1">{isAr ? 'الوقت' : 'Time'}</h4>
+                    <p className="font-bold text-zinc-900">{previewBooking.booking_time?.substring(0,5)}</p>
+                  </div>
+                </div>
+                <div>
+                  <h4 className="text-zinc-500 text-sm font-medium mb-2">{isAr ? 'الخدمات' : 'Services'}</h4>
+                  <div className="space-y-2">
+                    {previewBooking.details?.map((d: any, idx: number) => (
+                      <div key={idx} className="flex justify-between items-center p-3 bg-zinc-50 rounded-xl">
+                        <span className="font-medium text-zinc-900">{isAr ? d.services?.name_ar : d.services?.name_en}</span>
+                        <span className="text-sm font-bold text-zinc-900">{currSymbol} {d.price}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+                <div className="flex justify-between items-center pt-4 border-t border-zinc-100">
+                  <span className="text-zinc-500 font-medium">{isAr ? 'الإجمالي' : 'Total'}</span>
+                  <span className="text-2xl font-bold text-zinc-900">{currSymbol} {previewBooking.total_amount}</span>
+                </div>
+                <div className="flex justify-center pt-2">
+                  <QRCodeSVG value={previewBooking.id} size={100} level="M" />
+                </div>
+                
+                {(previewBooking.status === 'pending' || previewBooking.status === 'confirmed') && (
+                  <div className="pt-4">
+                    <button 
+                      onClick={() => {
+                        handleCancelBooking(previewBooking.id);
+                        setPreviewBooking(null);
+                      }}
+                      className="w-full py-3.5 bg-rose-50 text-rose-600 rounded-xl font-bold hover:bg-rose-100 transition-colors border border-rose-100"
+                    >
+                      {isAr ? 'إلغاء الحجز' : 'Cancel Booking'}
+                    </button>
+                  </div>
+                )}
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+      {/* Global Toast Notification */}
+      {/* Global Toast Notification */}
+      <AnimatePresence>
+        {toast && (
+          <motion.div
+            initial={{ opacity: 0, y: 50, x: '-50%' }}
+            animate={{ opacity: 1, y: 0, x: '-50%' }}
+            exit={{ opacity: 0, y: 50, x: '-50%' }}
+            className={`fixed bottom-24 left-1/2 z-[100] flex items-center gap-3 px-5 py-3.5 rounded-2xl shadow-xl border ${
+              toast.type === 'success' ? 'bg-emerald-50 border-emerald-100 text-emerald-800' :
+              toast.type === 'error' ? 'bg-rose-50 border-rose-100 text-rose-800' :
+              'bg-blue-50 border-blue-100 text-blue-800'
+            }`}
+          >
+            {toast.type === 'success' && <CheckCircle2 className="w-5 h-5 text-emerald-500" />}
+            <span className="text-sm font-bold whitespace-nowrap">{toast.message}</span>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </>
+  );
+
   if (step === 'confirmed' && bookingConfirmed) {
     return (
+      <>
       <div className="max-w-2xl mx-auto p-4 md:p-8 mt-10">
         <motion.div 
           initial={{ opacity: 0, scale: 0.95 }}
@@ -511,11 +610,14 @@ export function ClientApp() {
           </button>
         </motion.div>
       </div>
+      {overlays}
+    </>
     );
   }
 
   if (step === 'datetime' && selectedSalon) {
     return (
+      <>
       <div className="max-w-3xl mx-auto p-4 md:p-8 space-y-6">
         <button onClick={() => setStep('services')} className="flex items-center gap-2 text-zinc-500 hover:text-zinc-900 transition-colors font-medium">
           {isAr ? <ArrowRight className="w-4 h-4" /> : <ArrowLeft className="w-4 h-4" />}
@@ -616,11 +718,14 @@ export function ClientApp() {
           </div>
         </div>
       </div>
+      {overlays}
+    </>
     );
   }
 
   if (step === 'services' && selectedSalon) {
     return (
+      <>
       <div className="max-w-3xl mx-auto p-4 md:p-8 space-y-6">
         <button onClick={() => setSelectedSalon(null)} className="flex items-center gap-2 text-zinc-500 hover:text-zinc-900 transition-colors font-medium">
           {isAr ? <ArrowRight className="w-4 h-4" /> : <ArrowLeft className="w-4 h-4" />}
@@ -688,24 +793,27 @@ export function ClientApp() {
           </div>
         </div>
       </div>
+      {overlays}
+    </>
     );
   }
 
   const handleCancelBooking = async (bookingId: string) => {
     if (!window.confirm(isAr ? 'هل أنت متأكد من إلغاء هذا الحجز؟' : 'Are you sure you want to cancel this booking?')) return;
     try {
-      const { error } = await supabase.from('bookings').update({ status: 'cancelled' }).eq('id', bookingId);
+      const { error } = await supabase.from('bookings').update({ status: 'canceled' }).eq('id', bookingId);
       if (error) throw error;
-      setMyBookings(prev => prev.map(b => b.id === bookingId ? { ...b, status: 'cancelled' } : b));
-      alert(isAr ? 'تم إلغاء الحجز بنجاح' : 'Booking cancelled successfully');
+      setMyBookings(prev => prev.map(b => b.id === bookingId ? { ...b, status: 'canceled' } : b));
+      showToast(isAr ? 'تم إلغاء الحجز بنجاح' : 'Booking cancelled successfully', 'success');
     } catch (err) {
       console.error(err);
-      alert(isAr ? 'حدث خطأ أثناء الإلغاء' : 'Error cancelling booking');
+      showToast(isAr ? 'حدث خطأ أثناء الإلغاء: ' + err.message : 'Error cancelling booking: ' + err.message, 'error');
     }
   };
 
   if (step === 'profile') {
     return (
+      <>
       <div className="max-w-2xl mx-auto p-4 md:p-8 space-y-6">
         <button onClick={() => setStep('salons')} className="flex items-center gap-2 text-zinc-500 hover:text-zinc-900 transition-colors font-medium">
           {isAr ? <ArrowRight className="w-4 h-4" /> : <ArrowLeft className="w-4 h-4" />}
@@ -774,6 +882,8 @@ export function ClientApp() {
           </div>
         </div>
       </div>
+      {overlays}
+    </>
     );
   }
 
@@ -784,8 +894,8 @@ export function ClientApp() {
     const currentDateTime = new Date();
 
     const filteredBookings = myBookings.filter(b => {
-      if (bookingFilter === 'cancelled') return b.status === 'cancelled';
-      if (b.status === 'cancelled') return false; 
+      if (bookingFilter === 'canceled') return b.status === 'canceled';
+      if (b.status === 'canceled') return false; 
       
       const isPast = b.booking_date < today || b.status === 'completed';
       if (bookingFilter === 'past') return isPast;
@@ -794,6 +904,7 @@ export function ClientApp() {
     });
 
     return (
+      <>
       <div className="max-w-3xl mx-auto p-4 md:p-8 space-y-6">
         <button onClick={() => setStep('salons')} className="flex items-center gap-2 text-zinc-500 hover:text-zinc-900 transition-colors font-medium">
           {isAr ? <ArrowRight className="w-4 h-4" /> : <ArrowLeft className="w-4 h-4" />}
@@ -809,8 +920,8 @@ export function ClientApp() {
           <button onClick={() => setBookingFilter('past')} className={`flex-1 py-2 text-sm font-bold rounded-lg transition-colors ${bookingFilter === 'past' ? 'bg-white text-zinc-900 shadow-sm' : 'text-zinc-500 hover:text-zinc-900'}`}>
             {isAr ? 'السابقة' : 'Past'}
           </button>
-          <button onClick={() => setBookingFilter('cancelled')} className={`flex-1 py-2 text-sm font-bold rounded-lg transition-colors ${bookingFilter === 'cancelled' ? 'bg-white text-zinc-900 shadow-sm' : 'text-zinc-500 hover:text-zinc-900'}`}>
-            {isAr ? 'الملغية' : 'Cancelled'}
+          <button onClick={() => setBookingFilter('canceled')} className={`flex-1 py-2 text-sm font-bold rounded-lg transition-colors ${bookingFilter === 'canceled' ? 'bg-white text-zinc-900 shadow-sm' : 'text-zinc-500 hover:text-zinc-900'}`}>
+            {isAr ? 'الملغية' : 'Canceled'}
           </button>
         </div>
 
@@ -843,8 +954,8 @@ export function ClientApp() {
                     </div>
                   </div>
                   <div className="flex flex-col justify-between items-end gap-3">
-                    <span className={`text-xs font-bold px-3 py-1 rounded-full ${b.status === 'cancelled' ? 'bg-rose-100 text-rose-700' : b.status === 'completed' ? 'bg-emerald-100 text-emerald-700' : b.status === 'pending' ? 'bg-amber-100 text-amber-700' : 'bg-blue-100 text-blue-700'}`}>
-                      {isAr ? (b.status === 'cancelled' ? 'ملغي' : b.status === 'completed' ? 'مكتمل' : b.status === 'pending' ? 'قيد الانتظار' : 'مؤكد') : (b.status === 'cancelled' ? 'Cancelled' : b.status === 'completed' ? 'Completed' : b.status === 'pending' ? 'Pending' : 'Confirmed')}
+                    <span className={`text-xs font-bold px-3 py-1 rounded-full ${b.status === 'canceled' ? 'bg-rose-100 text-rose-700' : b.status === 'completed' ? 'bg-emerald-100 text-emerald-700' : b.status === 'pending' ? 'bg-amber-100 text-amber-700' : 'bg-blue-100 text-blue-700'}`}>
+                      {isAr ? (b.status === 'canceled' ? 'ملغي' : b.status === 'completed' ? 'مكتمل' : b.status === 'pending' ? 'قيد الانتظار' : 'مؤكد') : (b.status === 'canceled' ? 'Canceled' : b.status === 'completed' ? 'Completed' : b.status === 'pending' ? 'Pending' : 'Confirmed')}
                     </span>
                     {b.status === 'confirmed' && (
                        <span className="text-xs text-zinc-400 font-mono">ID: {b.id.substring(0,8)}</span>
@@ -873,10 +984,13 @@ export function ClientApp() {
           )}
         </div>
       </div>
+      {overlays}
+    </>
     );
   }
 
   return (
+    <>
     <div className="max-w-5xl mx-auto p-4 md:p-8 space-y-8 pb-24">
       {/* Hero Section */}
       <section className="relative bg-zinc-900 rounded-[24px] overflow-hidden p-8 md:p-12 text-white">
@@ -1033,80 +1147,7 @@ export function ClientApp() {
       </section>
 
 
-      {/* Preview Modal */}
-      <AnimatePresence>
-        {previewBooking && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-zinc-900/50 backdrop-blur-sm"
-          >
-            <motion.div
-              initial={{ opacity: 0, scale: 0.95, y: 20 }}
-              animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.95, y: 20 }}
-              className="bg-white rounded-3xl w-full max-w-md overflow-hidden shadow-xl"
-            >
-              <div className="p-6 border-b border-zinc-100 flex justify-between items-center">
-                <h3 className="font-bold text-xl text-zinc-900">{isAr ? 'تفاصيل الحجز' : 'Booking Details'}</h3>
-                <button onClick={() => setPreviewBooking(null)} className="p-2 bg-zinc-50 rounded-full text-zinc-400 hover:text-zinc-700 transition-colors">
-                  <X className="w-5 h-5" />
-                </button>
-              </div>
-              <div className="p-6 space-y-6">
-                <div>
-                  <h4 className="text-zinc-500 text-sm font-medium mb-1">{isAr ? 'الصالون' : 'Salon'}</h4>
-                  <p className="font-bold text-zinc-900 text-lg">{isAr ? previewBooking.salon?.name_ar : previewBooking.salon?.name_en}</p>
-                </div>
-                <div className="flex justify-between">
-                  <div>
-                    <h4 className="text-zinc-500 text-sm font-medium mb-1">{isAr ? 'التاريخ' : 'Date'}</h4>
-                    <p className="font-bold text-zinc-900">{previewBooking.booking_date}</p>
-                  </div>
-                  <div className="text-right">
-                    <h4 className="text-zinc-500 text-sm font-medium mb-1">{isAr ? 'الوقت' : 'Time'}</h4>
-                    <p className="font-bold text-zinc-900">{previewBooking.booking_time?.substring(0,5)}</p>
-                  </div>
-                </div>
-                <div>
-                  <h4 className="text-zinc-500 text-sm font-medium mb-2">{isAr ? 'الخدمات' : 'Services'}</h4>
-                  <div className="space-y-2">
-                    {previewBooking.details?.map((d: any, idx: number) => (
-                      <div key={idx} className="flex justify-between items-center p-3 bg-zinc-50 rounded-xl">
-                        <span className="font-medium text-zinc-900">{isAr ? d.services?.name_ar : d.services?.name_en}</span>
-                        <span className="text-sm font-bold text-zinc-900">{currSymbol} {d.price}</span>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-                <div className="flex justify-between items-center pt-4 border-t border-zinc-100">
-                  <span className="text-zinc-500 font-medium">{isAr ? 'الإجمالي' : 'Total'}</span>
-                  <span className="text-2xl font-bold text-zinc-900">{currSymbol} {previewBooking.total_amount}</span>
-                </div>
-                <div className="flex justify-center pt-2">
-                  <QRCodeSVG value={previewBooking.id} size={100} level="M" />
-                </div>
-                
-                {(previewBooking.status === 'pending' || previewBooking.status === 'confirmed') && (
-                  <div className="pt-4">
-                    <button 
-                      onClick={() => {
-                        handleCancelBooking(previewBooking.id);
-                        setPreviewBooking(null);
-                      }}
-                      className="w-full py-3.5 bg-rose-50 text-rose-600 rounded-xl font-bold hover:bg-rose-100 transition-colors border border-rose-100"
-                    >
-                      {isAr ? 'إلغاء الحجز' : 'Cancel Booking'}
-                    </button>
-                  </div>
-                )}
-              </div>
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-      {/* Global Toast Notification */}
+      
       <AnimatePresence>
         {toast && (
           <motion.div
@@ -1125,5 +1166,7 @@ export function ClientApp() {
         )}
       </AnimatePresence>
     </div>
+      {overlays}
+    </>
   );
 }

@@ -718,8 +718,9 @@ export function Dashboards() {
                 </div>
                 <div>
                   <h4 className="font-bold text-zinc-900">{isAr ? b.client?.first_name_ar : b.client?.first_name_en}</h4>
+                  <p className="text-sm font-medium text-zinc-600 mt-1" dir="ltr">{b.client?.mobile || ''}</p>
                   <p className="text-sm text-zinc-500">{b.booking_date} • {b.booking_time}</p>
-                  <p className="text-sm font-medium text-zinc-600 mt-1">{isAr ? 'الموظف' : 'Staff'}: {isAr ? b.artist?.first_name_ar : b.artist?.first_name_en}</p>
+                  <p className="text-sm font-medium text-zinc-600 mt-1">{isAr ? 'الموظف' : 'Staff'}: {isAr ? (b.staff?.profiles?.first_name_ar || b.staff?.profile?.first_name_ar || 'غير محدد') : (b.staff?.profiles?.first_name_en || b.staff?.profile?.first_name_en || 'Not Assigned')}</p>
                 </div>
               </div>
               <div className="flex items-center gap-3 w-full md:w-auto">
@@ -1153,12 +1154,14 @@ export function Dashboards() {
                       <p className="font-bold text-zinc-900 text-lg">
                         {isAr ? (selectedBookingForEdit.client?.first_name_ar || selectedBookingForEdit.client?.first_name_en) : (selectedBookingForEdit.client?.first_name_en || selectedBookingForEdit.client?.first_name_ar)}
                       </p>
-                      <p className="text-sm text-zinc-600 mt-1">{selectedBookingForEdit.client?.mobile}</p>
+                      {role !== 'artist' && (
+                        <p className="text-sm text-zinc-600 mt-1">{selectedBookingForEdit.client?.mobile}</p>
+                      )}
                     </div>
                     <div className="bg-zinc-50 p-4 rounded-2xl border border-zinc-100">
                       <p className="text-sm text-zinc-500 mb-1">{isAr ? 'الموظف (الفني)' : 'Staff (Artist)'}</p>
                       <p className="font-bold text-zinc-900 text-lg">
-                        {isAr ? (selectedBookingForEdit.artist?.first_name_ar || selectedBookingForEdit.artist?.first_name_en) : (selectedBookingForEdit.artist?.first_name_en || selectedBookingForEdit.artist?.first_name_ar)}
+                        {isAr ? (selectedBookingForEdit.staff?.profiles?.first_name_ar || selectedBookingForEdit.staff?.profile?.first_name_ar || selectedBookingForEdit.staff?.profiles?.first_name_en || 'غير محدد') : (selectedBookingForEdit.staff?.profiles?.first_name_en || selectedBookingForEdit.staff?.profile?.first_name_en || selectedBookingForEdit.staff?.profiles?.first_name_ar || 'Not Assigned')}
                       </p>
                       <div className="mt-2">
                         <StatusBadge status={selectedBookingForEdit.status} isAr={isAr} />
@@ -1208,13 +1211,59 @@ export function Dashboards() {
                   </div>
                 </div>
                 
-                <div className="p-6 border-t border-zinc-100 bg-zinc-50/50 flex justify-end">
-                  <button 
-                    onClick={() => setShowBookingEditModal(false)}
-                    className="px-6 py-2.5 bg-zinc-900 text-white rounded-xl font-bold hover:bg-zinc-800 transition-colors"
-                  >
-                    {isAr ? 'إغلاق' : 'Close'}
-                  </button>
+                <div className="p-6 border-t border-zinc-100 bg-zinc-50/50 flex flex-col md:flex-row gap-4 justify-between items-center">
+                  {role !== 'artist' ? (
+                    <>
+                      <div className="flex gap-2 w-full md:w-auto">
+                        <button 
+                          onClick={async () => {
+                            if (confirm(isAr ? 'هل أنت متأكد من حذف الحجز نهائياً؟' : 'Are you sure you want to permanently delete this booking?')) {
+                                const { error } = await supabase.from('bookings').delete().eq('id', selectedBookingForEdit.id);
+                                if (error) alert(isAr ? 'خطأ في الحذف' : 'Error deleting booking');
+                                else {
+                                  setBookings(bookings.filter(b => b.id !== selectedBookingForEdit.id));
+                                  setShowBookingEditModal(false);
+                                }
+                            }
+                          }}
+                          className="flex-1 md:flex-none px-6 py-2.5 bg-rose-100 text-rose-700 rounded-xl font-bold hover:bg-rose-200 transition-colors"
+                        >
+                          {isAr ? 'حذف نهائياً' : 'Delete Permanently'}
+                        </button>
+                      </div>
+                      <div className="flex gap-2 w-full md:w-auto">
+                        <select 
+                          value={selectedBookingForEdit.status} 
+                          onChange={async (e) => {
+                            const newStatus = e.target.value;
+                            await updateBookingStatus(selectedBookingForEdit.id, newStatus);
+                            setSelectedBookingForEdit({...selectedBookingForEdit, status: newStatus});
+                          }}
+                          className="px-4 py-2.5 rounded-xl font-bold text-sm border border-zinc-200 outline-none"
+                        >
+                          <option value="pending">{t.pending}</option>
+                          <option value="confirmed">{t.confirmed}</option>
+                          <option value="completed">{t.completed}</option>
+                          <option value="cancelled">{t.cancelled}</option>
+                        </select>
+                        <button 
+                          onClick={() => setShowBookingEditModal(false)}
+                          className="flex-1 md:flex-none px-6 py-2.5 bg-zinc-900 text-white rounded-xl font-bold hover:bg-zinc-800 transition-colors"
+                        >
+                          {isAr ? 'إغلاق' : 'Close'}
+                        </button>
+                      </div>
+                    </>
+                  ) : (
+                    <div className="flex w-full justify-end">
+                      <button 
+                        onClick={() => setShowBookingEditModal(false)}
+                        className="px-6 py-2.5 bg-zinc-900 text-white rounded-xl font-bold hover:bg-zinc-800 transition-colors"
+                      >
+                        {isAr ? 'إغلاق' : 'Close'}
+                      </button>
+                    </div>
+                  )}
                 </div>
               </motion.div>
             </motion.div>

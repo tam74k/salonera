@@ -132,9 +132,14 @@ export function Dashboards() {
               }
 
               const clientName = isAr ? b.client.first_name_ar : b.client.first_name_en;
+              const salonName = isAr ? salonData.name_ar : salonData.name_en;
+              const artistName = isAr ? (b.staff?.profiles?.first_name_ar || b.staff?.profile?.first_name_ar || 'غير محدد') : (b.staff?.profiles?.first_name_en || b.staff?.profile?.first_name_en || 'Not Assigned');
+              const servicesStr = b.details?.map((d: any) => isAr ? d.services?.name_ar : d.services?.name_en).join(', ') || '';
+              const address = isAr ? salonData.address_ar : salonData.address_en;
+              
               const message = isAr 
-                ? `تذكير: مرحباً ${clientName}،\nموعدك في الصالون (${b.booking_time}) اقترب ولم يتبق سوى ساعة أو أقل.\nبانتظارك!` 
-                : `Reminder: Hello ${clientName},\nYour salon appointment at (${b.booking_time}) is starting in less than an hour.\nSee you soon!`;
+                ? `تذكير: مرحباً ${clientName}،\nموعدك في صالون ${salonName} اقترب ولم يتبق سوى ساعة أو أقل.\n\n📅 التاريخ: ${b.booking_date}\n⏰ الوقت: ${b.booking_time}\n👩‍🎨 الفني: ${artistName}\n💅 الخدمات: ${servicesStr}\n\n📍 العنوان: ${address}\n📞 للتواصل: ${salonData.mobile}\n\nبانتظارك!` 
+                : `Reminder: Hello ${clientName},\nYour appointment at ${salonName} is starting in less than an hour.\n\n📅 Date: ${b.booking_date}\n⏰ Time: ${b.booking_time}\n👩‍🎨 Artist: ${artistName}\n💅 Services: ${servicesStr}\n\n📍 Address: ${address}\n📞 Phone: ${salonData.mobile}\n\nSee you soon!`;
               
               await sendWhatsAppMessage(apiUrl, instance, apiKey, b.client.mobile, message);
               remindedIds.push(b.id);

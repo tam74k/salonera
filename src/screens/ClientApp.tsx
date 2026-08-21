@@ -310,9 +310,14 @@ export function ClientApp() {
 
         if (instance && apiKey && profile?.mobile) {
           const clientName = isAr ? profile.first_name_ar : profile.first_name_en;
+          const salonName = isAr ? selectedSalon.name_ar : selectedSalon.name_en;
+          const artistName = isAr ? (selectedStaff?.profile?.first_name_ar || 'غير محدد') : (selectedStaff?.profile?.first_name_en || 'Not Assigned');
+          const servicesStr = selectedServices.map(s => isAr ? s.name_ar : s.name_en).join(', ');
+          const address = isAr ? selectedSalon.address_ar : selectedSalon.address_en;
+
           const message = isAr 
-            ? `مرحباً ${clientName}،\nلقد استلمنا طلب حجزك رقم ${booking.id}.\nنحن بانتظار تأكيد الإدارة وسنعلمك قريباً!\nيمكنك إبراز الكود الخاص بك عند الحضور.` 
-            : `Hello ${clientName},\nWe received your booking request #${booking.id}.\nAwaiting admin confirmation. We will notify you soon!\nPlease show your QR code upon arrival.`;
+            ? `مرحباً ${clientName}،\nلقد استلمنا طلب حجزك رقم ${booking.id} في صالون ${salonName}.\nنحن بانتظار تأكيد الإدارة وسنعلمك قريباً!\n\n📅 التاريخ: ${selectedDate}\n⏰ الوقت: ${selectedTime}\n👩‍🎨 الفني: ${artistName}\n💅 الخدمات: ${servicesStr}\n\n📍 العنوان: ${address}\n📞 للتواصل: ${selectedSalon.mobile}\n\nيمكنك إبراز الكود الخاص بك عند الحضور.` 
+            : `Hello ${clientName},\nWe received your booking request #${booking.id} at ${salonName}.\nAwaiting admin confirmation. We will notify you soon!\n\n📅 Date: ${selectedDate}\n⏰ Time: ${selectedTime}\n👩‍🎨 Artist: ${artistName}\n💅 Services: ${servicesStr}\n\n📍 Address: ${address}\n📞 Phone: ${selectedSalon.mobile}\n\nPlease show your QR code upon arrival.`;
           
           await sendWhatsAppMessage(apiUrl, instance, apiKey, profile.mobile, message);
         }

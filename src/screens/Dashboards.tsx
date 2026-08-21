@@ -90,6 +90,9 @@ export function Dashboards() {
   const [searchQuery, setSearchQuery] = useState('');
   const [bookingViewTab, setBookingViewTab] = useState<'active'|'archive'>('active');
   const [showScanner, setShowScanner] = useState(false);
+  const [showTimeOffModal, setShowTimeOffModal] = useState(false);
+  const [isSavingTimeOff, setIsSavingTimeOff] = useState(false);
+  const [timeOffData, setTimeOffData] = useState({ date: '', staff_id: '', type: 'full_day', time: '10:00' });
   
   useEffect(() => {
     if (user) {
@@ -187,12 +190,20 @@ export function Dashboards() {
   const fetchSalonAndBookings = async () => {
     setLoading(true);
     try {
-      const { data: salon } = await supabase
+      let { data: salon } = await supabase
         .from('salons')
         .select('*')
         .eq('owner_id', user?.id)
         .single();
       
+      if (!salon && user) {
+        const { data: stf } = await supabase.from('staff').select('salon_id').eq('profile_id', user.id).single();
+        if (stf && stf.salon_id) {
+           const { data: staffSalon } = await supabase.from('salons').select('*').eq('id', stf.salon_id).single();
+           salon = staffSalon;
+        }
+      }
+
       if (salon) {
         
         setSalonData(salon);
@@ -481,6 +492,32 @@ export function Dashboards() {
     });
   };
 
+  const handleSaveTimeOff = async () => {
+    if (!timeOffData.date || !salonData) return;
+    setIsSavingTimeOff(true);
+    try {
+      const { error } = await supabase.from('bookings').insert({
+        salon_id: salonData.id,
+        client_id: user?.id,
+        staff_id: timeOffData.staff_id || null,
+        booking_date: timeOffData.date,
+        booking_time: timeOffData.type === 'full_day' ? '00:00:00' : timeOffData.time,
+        total_amount: -1,
+        status: 'confirmed'
+      });
+      if (!error) {
+        setShowTimeOffModal(false);
+        fetchSalonAndBookings();
+        alert(isAr ? 'تم حفظ الإغلاق بنجاح' : 'Time off saved successfully');
+      } else {
+        alert('Error saving time off');
+      }
+    } catch(err) {
+      console.error(err);
+    }
+    setIsSavingTimeOff(false);
+  };
+
   const updateBookingStatus = async (bookingId: string, status: string, isArtistView = false) => {
     try {
       const { error } = await supabase
@@ -667,9 +704,13 @@ export function Dashboards() {
         
         <NavButton icon={LayoutDashboard} label={t.dashboard} active={activeTab === 'dashboard'} onClick={() => setActiveTab('dashboard')} />
         
-        <NavButton icon={Users} label={t.staff_management} active={activeTab === 'staff'} onClick={() => setActiveTab('staff')} />
-        <NavButton icon={Scissors} label={t.services_management} active={activeTab === 'services'} onClick={() => setActiveTab('services')} />
-        <NavButton icon={MessageSquare} label={t.whatsapp_api_settings} active={activeTab === 'settings'} onClick={() => setActiveTab('settings')} />
+        {role !== 'cashier' && (
+          <>
+            <NavButton icon={Users} label={t.staff_management} active={activeTab === 'staff'} onClick={() => setActiveTab('staff')} />
+            <NavButton icon={Scissors} label={t.services_management} active={activeTab === 'services'} onClick={() => setActiveTab('services')} />
+            <NavButton icon={MessageSquare} label={t.whatsapp_api_settings} active={activeTab === 'settings'} onClick={() => setActiveTab('settings')} />
+          </>
+        )}
       </aside>
 
       {/* Main Content Area */}
@@ -722,10 +763,18 @@ export function Dashboards() {
     return (
       <>
         <div className="flex flex-col md:flex-row items-start md:items-center justify-between mb-6 gap-4">
-          <h3 className="text-xl font-bold text-zinc-900 flex items-center gap-2">
-            <Calendar className="w-5 h-5 text-zinc-500" />
-            {isAr ? 'قائمة الحجوزات' : 'Bookings List'}
-          </h3>
+          <div className="flex items-center gap-4">
+            <h3 className="text-xl font-bold text-zinc-900 flex items-center gap-2">
+              <Calendar className="w-5 h-5 text-zinc-500" />
+              {isAr ? 'قائمة الحجوزات' : 'Bookings List'}
+            </h3>
+            <button 
+              onClick={() => { setTimeOffData({ date: new Date().toISOString().split('T')[0], staff_id: '', type: 'full_day', time: '10:00' }); setShowTimeOffModal(true); }}
+              className="text-xs font-bold px-3 py-1.5 bg-rose-50 text-rose-600 rounded-lg border border-rose-100 hover:bg-rose-100 transition-colors"
+            >
+              {isAr ? '+ إغلاق مواعيد' : '+ Block Times'}
+            </button>
+          </div>
           <div className="flex bg-slate-100 p-1 rounded-xl">
             <button 
               onClick={() => { setBookingViewTab('active'); setSearchQuery(''); }}
@@ -1199,6 +1248,88 @@ export function Dashboards() {
           </>
         )}
       
+        {/* Time Off Modal */}
+        <AnimatePresence>
+          {showTimeOffModal && (
+            <motion.div 
+              initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+              className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-zinc-900/40 backdrop-blur-sm"
+              onClick={() => setShowTimeOffModal(false)}
+            >
+              <motion.div 
+                initial={{ opacity: 0, scale: 0.95, y: 20 }}
+                animate={{ opacity: 1, scale: 1, y: 0 }}
+                exit={{ opacity: 0, scale: 0.95, y: 20 }}
+                onClick={e => e.stopPropagation()}
+                className="bg-white rounded-[24px] shadow-2xl w-full max-w-md overflow-hidden flex flex-col"
+              >
+                <div className="p-6 border-b border-zinc-100 flex justify-between items-center bg-zinc-50/50">
+                  <h2 className="text-xl font-bold text-zinc-900">
+                    {isAr ? 'إغلاق مواعيد / إجازة' : 'Block Times / Time Off'}
+                  </h2>
+                  <button onClick={() => setShowTimeOffModal(false)} className="p-2 text-zinc-400 hover:text-zinc-600 hover:bg-zinc-100 rounded-full transition-colors">
+                    <X className="w-5 h-5" />
+                  </button>
+                </div>
+                
+                <div className="p-6 space-y-4">
+                  <div>
+                    <label className="block text-sm font-medium text-zinc-700 mb-1.5">{isAr ? 'التاريخ' : 'Date'}</label>
+                    <input type="date" min={new Date().toISOString().split('T')[0]} value={timeOffData.date} onChange={(e) => setTimeOffData({...timeOffData, date: e.target.value})} className="w-full bg-white border border-zinc-200 rounded-xl px-4 py-2.5" />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-zinc-700 mb-1.5">{isAr ? 'الفني' : 'Artist'}</label>
+                    <select value={timeOffData.staff_id} onChange={(e) => setTimeOffData({...timeOffData, staff_id: e.target.value})} className="w-full bg-white border border-zinc-200 rounded-xl px-4 py-2.5">
+                      <option value="">{isAr ? 'جميع الفنيين (إغلاق الصالون بالكامل)' : 'All Artists (Block entire salon)'}</option>
+                      {staffList?.map((st: any) => (
+                        <option key={st.id} value={st.id}>
+                          {isAr ? (st.profile?.first_name_ar || st.profile?.first_name_en) : (st.profile?.first_name_en || st.profile?.first_name_ar)}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-zinc-700 mb-1.5">{isAr ? 'النوع' : 'Type'}</label>
+                    <div className="flex bg-zinc-100 p-1.5 rounded-xl">
+                      <button 
+                        onClick={() => setTimeOffData({...timeOffData, type: 'full_day'})} 
+                        className={`flex-1 py-2 text-sm font-bold rounded-lg transition-colors ${timeOffData.type === 'full_day' ? 'bg-white text-zinc-900 shadow-sm' : 'text-zinc-500'}`}
+                      >
+                        {isAr ? 'يوم كامل' : 'Full Day'}
+                      </button>
+                      <button 
+                        onClick={() => setTimeOffData({...timeOffData, type: 'specific_time'})} 
+                        className={`flex-1 py-2 text-sm font-bold rounded-lg transition-colors ${timeOffData.type === 'specific_time' ? 'bg-white text-zinc-900 shadow-sm' : 'text-zinc-500'}`}
+                      >
+                        {isAr ? 'وقت محدد' : 'Specific Time'}
+                      </button>
+                    </div>
+                  </div>
+                  {timeOffData.type === 'specific_time' && (
+                    <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }}>
+                      <label className="block text-sm font-medium text-zinc-700 mb-1.5 mt-4">{isAr ? 'الوقت' : 'Time'}</label>
+                      <input type="time" step="1800" value={timeOffData.time} onChange={(e) => setTimeOffData({...timeOffData, time: e.target.value})} className="w-full bg-white border border-zinc-200 rounded-xl px-4 py-2.5" />
+                    </motion.div>
+                  )}
+                </div>
+
+                <div className="p-6 border-t border-zinc-100 bg-zinc-50/50 flex justify-end gap-3">
+                  <button onClick={() => setShowTimeOffModal(false)} className="px-6 py-2.5 bg-white border border-zinc-200 text-zinc-700 rounded-xl font-bold hover:bg-zinc-50 transition-colors">
+                    {isAr ? 'إلغاء' : 'Cancel'}
+                  </button>
+                  <button 
+                    disabled={isSavingTimeOff}
+                    onClick={handleSaveTimeOff} 
+                    className="px-6 py-2.5 bg-zinc-900 text-white rounded-xl font-bold hover:bg-zinc-800 transition-colors disabled:bg-slate-400"
+                  >
+                    {isSavingTimeOff ? (isAr ? 'جاري الحفظ...' : 'Saving...') : (isAr ? 'حفظ وإغلاق' : 'Save Block')}
+                  </button>
+                </div>
+              </motion.div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
         {/* Staff Edit Modal */}
         <AnimatePresence>
           {showStaffEditModal && selectedStaffForEdit && (

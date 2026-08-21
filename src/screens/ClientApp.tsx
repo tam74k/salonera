@@ -77,6 +77,13 @@ export function ClientApp() {
   const [services, setServices] = useState<any[]>([]);
   const [staff, setStaff] = useState<any[]>([]);
   const [bookedTimes, setBookedTimes] = useState<string[]>([]);
+  const [toast, setToast] = useState<{ message: string, type: 'success' | 'error' | 'info' } | null>(null);
+
+  const showToast = (message: string, type: 'success' | 'error' | 'info' = 'success') => {
+    setToast({ message, type });
+    setTimeout(() => setToast(null), 4000);
+  };
+
   const [myBookings, setMyBookings] = useState<any[]>([]);
   const [bookingFilter, setBookingFilter] = useState<'current' | 'past' | 'cancelled'>('current');
   const [reviewRating, setReviewRating] = useState(5);
@@ -163,23 +170,30 @@ export function ClientApp() {
     setRescheduleTime('');
     try {
       const { data } = await supabase.from('bookings')
-        .select('booking_time')
+        .select('booking_time, total_amount')
         .eq('booking_date', date)
         .eq('salon_id', salonId)
-        .neq('status', 'canceled');
+        .neq('status', 'canceled')
+        .neq('status', 'cancelled');
       
       let filtered = data || [];
       if (staffId) {
         const { data: staffBookings } = await supabase.from('bookings')
-          .select('booking_time')
+          .select('booking_time, total_amount')
           .eq('booking_date', date)
           .eq('staff_id', staffId)
-          .neq('status', 'canceled');
+          .neq('status', 'canceled')
+          .neq('status', 'cancelled');
         filtered = staffBookings || [];
       }
       
-      const formattedTimes = filtered.map(b => b.booking_time.substring(0, 5));
-      setRescheduleBookedTimes(formattedTimes);
+      const isFullDayOff = filtered.some(b => b.total_amount === -1 && b.booking_time.startsWith('00:00'));
+      if (isFullDayOff) {
+        setRescheduleBookedTimes(['FULL_DAY_OFF']);
+      } else {
+        const formattedTimes = filtered.map(b => b.booking_time.substring(0, 5));
+        setRescheduleBookedTimes(formattedTimes);
+      }
       
       // Generate available times (simplified 9 to 21)
       const times = [];
@@ -194,6 +208,50 @@ export function ClientApp() {
       console.error(err);
     }
   };
+
+  useEffect(() => {
+    if (!user) return;
+
+    const channel = supabase.channel('client_bookings_updates')
+      .on(
+        'postgres_changes',
+        {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'bookings',
+          filter: `client_id=eq.${user.id}`,
+        },
+        (payload) => {
+          const newStatus = payload.new.status;
+          const oldStatus = payload.old.status;
+          
+          if (newStatus !== oldStatus) {
+            let msgEn = `Your booking status was updated to ${newStatus}`;
+            let msgAr = `تم تحديث حالة حجزك إلى ${newStatus}`;
+            
+            if (newStatus === 'confirmed') {
+              msgEn = 'Your booking has been confirmed!';
+              msgAr = 'تم تأكيد حجزك!';
+            } else if (newStatus === 'completed') {
+              msgEn = 'Your booking is completed. Thanks for visiting!';
+              msgAr = 'تم اكتمال حجزك. شكراً لزيارتك!';
+            } else if (newStatus === 'canceled' || newStatus === 'cancelled') {
+              msgEn = 'Your booking was canceled.';
+              msgAr = 'تم إلغاء حجزك.';
+            }
+
+            showToast(isAr ? msgAr : msgEn, (newStatus === 'canceled' || newStatus === 'cancelled') ? 'error' : 'success');
+            
+            fetchMyBookings();
+          }
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [user, isAr]);
 
   const fetchMyBookings = async () => {
     if (!user) return;
@@ -246,10 +304,11 @@ export function ClientApp() {
 
   const fetchBookedTimes = async () => {
     let query = supabase.from('bookings')
-      .select('booking_time')
+      .select('booking_time, total_amount')
       .eq('salon_id', selectedSalon.id)
       .eq('booking_date', selectedDate)
-      .neq('status', 'canceled');
+      .neq('status', 'canceled')
+      .neq('status', 'cancelled');
       
     if (selectedStaff) {
       query = query.eq('staff_id', selectedStaff);
@@ -257,6 +316,11 @@ export function ClientApp() {
     
     const { data } = await query;
     if (data) {
+      const fullDayOff = data.find(b => b.total_amount === -1 && b.booking_time.startsWith('00:00'));
+      if (fullDayOff) {
+        setBookedTimes(['FULL_DAY_OFF']);
+        return;
+      }
       // time in PG is usually 'HH:MM:SS', we need 'HH:MM'
       const formattedTimes = data.map(b => b.booking_time.substring(0, 5));
       setBookedTimes(formattedTimes);
@@ -344,7 +408,7 @@ export function ClientApp() {
   };
 
   const availableSlots = useMemo(() => {
-    if (!selectedSalon || !selectedDate) return [];
+    if (!selectedSalon || !selectedDate || bookedTimes.includes('FULL_DAY_OFF')) return [];
     
     return generateAvailableSlots(
       selectedSalon.working_hours_start || selectedSalon.open_time || '09:00',
@@ -834,6 +898,25 @@ export function ClientApp() {
           )}
         </div>
       </section>
+
+      {/* Global Toast Notification */}
+      <AnimatePresence>
+        {toast && (
+          <motion.div
+            initial={{ opacity: 0, y: 50, x: '-50%' }}
+            animate={{ opacity: 1, y: 0, x: '-50%' }}
+            exit={{ opacity: 0, y: 50, x: '-50%' }}
+            className={`fixed bottom-24 left-1/2 z-[100] flex items-center gap-3 px-5 py-3.5 rounded-2xl shadow-xl border ${
+              toast.type === 'success' ? 'bg-emerald-50 border-emerald-100 text-emerald-800' :
+              toast.type === 'error' ? 'bg-rose-50 border-rose-100 text-rose-800' :
+              'bg-blue-50 border-blue-100 text-blue-800'
+            }`}
+          >
+            {toast.type === 'success' && <CheckCircle2 className="w-5 h-5 text-emerald-500" />}
+            <span className="text-sm font-bold whitespace-nowrap">{toast.message}</span>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
+import PhoneInput from 'react-phone-number-input';
+import 'react-phone-number-input/style.css';
 import { useAppContext } from '../store';
 import { translations } from '../i18n';
 import { X, CheckCircle2, Image as ImageIcon, Clock, PlusCircle, Settings, Users, Calendar, LayoutDashboard, MessageSquare, Scissors, XCircle, Loader2 } from 'lucide-react';
@@ -916,7 +918,15 @@ export function Dashboards() {
                 <div className="grid md:grid-cols-3 gap-4 mb-6">
                   <div>
                     <label className="block text-sm font-medium text-zinc-700 mb-1.5">{isAr ? 'رقم الجوال' : 'Mobile'}</label>
-                    <input type="tel" value={salonSettingsData.mobile} onChange={e => setSalonSettingsData({...salonSettingsData, mobile: e.target.value})} className="w-full bg-zinc-50 border border-zinc-200 rounded-xl px-4 py-2.5 outline-none" dir="ltr" />
+                    <div className="relative" dir="ltr">
+  <PhoneInput
+    international
+    defaultCountry={salonSettingsData.country_code || 'SA'}
+    value={salonSettingsData.mobile}
+    onChange={(val: any) => setSalonSettingsData({...salonSettingsData, mobile: val || ''})}
+    className="w-full bg-zinc-50 border border-zinc-200 rounded-xl px-4 py-2.5 focus-within:ring-2 focus-within:ring-zinc-900 outline-none transition-all"
+  />
+</div>
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-zinc-700 mb-1.5">{isAr ? 'البريد الإلكتروني' : 'Email'}</label>
@@ -924,7 +934,15 @@ export function Dashboards() {
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-zinc-700 mb-1.5">{isAr ? 'رقم الواتساب' : 'WhatsApp'}</label>
-                    <input type="tel" value={salonSettingsData.whatsapp} onChange={e => setSalonSettingsData({...salonSettingsData, whatsapp: e.target.value})} className="w-full bg-zinc-50 border border-zinc-200 rounded-xl px-4 py-2.5 outline-none" dir="ltr" />
+                    <div className="relative" dir="ltr">
+  <PhoneInput
+    international
+    defaultCountry={salonSettingsData.country_code || 'SA'}
+    value={salonSettingsData.whatsapp}
+    onChange={(val: any) => setSalonSettingsData({...salonSettingsData, whatsapp: val || ''})}
+    className="w-full bg-zinc-50 border border-zinc-200 rounded-xl px-4 py-2.5 focus-within:ring-2 focus-within:ring-zinc-900 outline-none transition-all"
+  />
+</div>
                   </div>
                 </div>
 
@@ -1175,7 +1193,15 @@ export function Dashboards() {
                       </div>
                       <div>
                         <label className="block text-sm font-medium text-zinc-700 mb-1.5">{isAr ? 'رقم الجوال' : 'Mobile'}</label>
-                        <input type="tel" value={newArtistData.mobile} onChange={(e) => setNewArtistData({...newArtistData, mobile: e.target.value})} className="w-full bg-white border border-zinc-200 rounded-xl px-4 py-2.5" />
+                        <div className="relative" dir="ltr">
+  <PhoneInput
+    international
+    defaultCountry={salonData?.country_code || 'SA'}
+    value={newArtistData.mobile}
+    onChange={(val: any) => setNewArtistData({...newArtistData, mobile: val || ''})}
+    className="w-full bg-white border border-zinc-200 rounded-xl px-4 py-2.5 focus-within:ring-2 focus-within:ring-zinc-900 outline-none transition-all"
+  />
+</div>
                       </div>
                       <div>
                         <label className="block text-sm font-medium text-zinc-700 mb-1.5">{isAr ? 'كلمة المرور (افتراضي)' : 'Password (Default)'}</label>
@@ -1374,7 +1400,15 @@ export function Dashboards() {
                     </div>
                     <div>
                       <label className="block text-sm font-medium text-zinc-700 mb-1.5">{isAr ? 'رقم الجوال' : 'Mobile'}</label>
-                      <input type="tel" value={selectedStaffForEdit.profile?.mobile || ''} onChange={(e) => setSelectedStaffForEdit({...selectedStaffForEdit, profile: {...selectedStaffForEdit.profile, mobile: e.target.value}})} className="w-full bg-white border border-zinc-200 rounded-xl px-4 py-2.5 text-left" dir="ltr" />
+                      <div className="relative" dir="ltr">
+  <PhoneInput
+    international
+    defaultCountry={salonData?.country_code || 'SA'}
+    value={selectedStaffForEdit.profile?.mobile || ''}
+    onChange={(val: any) => setSelectedStaffForEdit({...selectedStaffForEdit, profile: {...selectedStaffForEdit.profile, mobile: val || ''}})}
+    className="w-full bg-white border border-zinc-200 rounded-xl px-4 py-2.5 focus-within:ring-2 focus-within:ring-zinc-900 outline-none transition-all"
+  />
+</div>
                     </div>
                     
                     <div className="md:col-span-2">

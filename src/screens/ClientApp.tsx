@@ -1,21 +1,66 @@
+import PhoneInput from 'react-phone-number-input';
 import React, { useState, useMemo, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { useAppContext } from '../store';
 import { translations } from '../i18n';
-import { MapPin, Star, ArrowRight, ArrowLeft, CheckCircle2, ChevronRight, ChevronLeft, Calendar as CalendarIcon, Clock, User as UserIcon, Loader2 } from 'lucide-react';
+import { MapPin, Star, ArrowRight, ArrowLeft, CheckCircle2, ChevronRight, ChevronLeft, Calendar as CalendarIcon, Clock, User as UserIcon, Loader2, Lock, Save, Eye, X } from 'lucide-react';
 import { QRCodeSVG } from 'qrcode.react';
 import { generateAvailableSlots } from '../lib/booking-utils';
 import { supabase } from '../lib/supabase';
 import { sendWhatsAppMessage } from '../lib/whatsapp';
 import { getCurrencySymbol } from '../lib/currency';
 
-type BookingStep = 'salons' | 'services' | 'datetime' | 'confirmed' | 'my-bookings';
+type BookingStep = 'salons' | 'services' | 'datetime' | 'confirmed' | 'my-bookings' | 'profile';
 
 export function ClientApp() {
   const { lang, isAr, user } = useAppContext();
   const t = translations[lang];
 
   const [step, setStep] = useState<BookingStep>('salons');
+  
+  const [profileData, setProfileData] = useState({ first_name_ar: '', first_name_en: '', mobile: '' });
+  const [newPassword, setNewPassword] = useState('');
+  const [isSavingProfile, setIsSavingProfile] = useState(false);
+  const [profileCountryCode, setProfileCountryCode] = useState<any>('');
+
+  const fetchUserProfile = async () => {
+    if (!user) return;
+    const { data } = await supabase.from('profiles').select('*').eq('id', user.id).single();
+    if (data) {
+       setProfileData({
+         first_name_ar: data.first_name_ar || '',
+         first_name_en: data.first_name_en || '',
+         mobile: data.mobile || ''
+       });
+    }
+  };
+
+  const handleSaveProfile = async () => {
+    if (!user) return;
+    setIsSavingProfile(true);
+    try {
+      const { error: profileErr } = await supabase.from('profiles').update({
+        first_name_ar: profileData.first_name_ar,
+        first_name_en: profileData.first_name_en,
+        mobile: profileData.mobile
+      }).eq('id', user.id);
+      
+      if (profileErr) throw profileErr;
+      
+      if (newPassword.trim()) {
+         const { error: pwdErr } = await supabase.auth.updateUser({ password: newPassword });
+         if (pwdErr) throw pwdErr;
+      }
+      
+      showToast(isAr ? 'تم حفظ التعديلات بنجاح' : 'Profile updated successfully', 'success');
+      setNewPassword('');
+    } catch(err: any) {
+      console.error(err);
+      showToast(err.message || (isAr ? 'حدث خطأ أثناء الحفظ' : 'Error updating profile'), 'error');
+    }
+    setIsSavingProfile(false);
+  };
+
   
   // Location filters
   const [countriesList, setCountriesList] = useState<any[]>([]);
@@ -85,6 +130,7 @@ export function ClientApp() {
   };
 
   const [myBookings, setMyBookings] = useState<any[]>([]);
+  const [previewBooking, setPreviewBooking] = useState<any>(null);
   const [bookingFilter, setBookingFilter] = useState<'current' | 'past' | 'cancelled'>('current');
   const [reviewRating, setReviewRating] = useState(5);
   const [reviewComment, setReviewComment] = useState('');
@@ -658,6 +704,79 @@ export function ClientApp() {
     }
   };
 
+  if (step === 'profile') {
+    return (
+      <div className="max-w-2xl mx-auto p-4 md:p-8 space-y-6">
+        <button onClick={() => setStep('salons')} className="flex items-center gap-2 text-zinc-500 hover:text-zinc-900 transition-colors font-medium">
+          {isAr ? <ArrowRight className="w-4 h-4" /> : <ArrowLeft className="w-4 h-4" />}
+          {isAr ? 'العودة للصالونات' : 'Back to Salons'}
+        </button>
+        <div className="bg-white rounded-[24px] overflow-hidden border border-zinc-100 shadow-sm p-6 md:p-8">
+          <div className="flex items-center gap-4 mb-8 pb-6 border-b border-zinc-100">
+            <div className="w-16 h-16 bg-zinc-100 rounded-full flex items-center justify-center text-zinc-400">
+              <UserIcon className="w-8 h-8" />
+            </div>
+            <div>
+              <h2 className="text-2xl font-bold text-zinc-900">{isAr ? 'حسابي' : 'My Profile'}</h2>
+              <p className="text-zinc-500 text-sm mt-1">{user?.email}</p>
+            </div>
+          </div>
+          
+          <div className="space-y-5">
+            <div className="grid md:grid-cols-2 gap-5">
+              <div>
+                <label className="block text-sm font-medium text-zinc-700 mb-1.5">{isAr ? 'الاسم (عربي)' : 'First Name (Arabic)'}</label>
+                <input type="text" value={profileData.first_name_ar} onChange={e => setProfileData({...profileData, first_name_ar: e.target.value})} className="w-full bg-zinc-50 border border-zinc-200 rounded-xl px-4 py-3 outline-none" />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-zinc-700 mb-1.5">{isAr ? 'الاسم (إنجليزي)' : 'First Name (English)'}</label>
+                <input type="text" value={profileData.first_name_en} onChange={e => setProfileData({...profileData, first_name_en: e.target.value})} className="w-full bg-zinc-50 border border-zinc-200 rounded-xl px-4 py-3 outline-none" />
+              </div>
+            </div>
+            
+            <div>
+              <label className="block text-sm font-medium text-zinc-700 mb-1.5">{isAr ? 'رقم الجوال' : 'Mobile Number'}</label>
+              <div className="relative" dir="ltr">
+                <PhoneInput
+                  international
+                  defaultCountry={profileCountryCode || 'SA'}
+                  value={profileData.mobile}
+                  onChange={(val: any) => setProfileData({...profileData, mobile: val || ''})}
+                  className="w-full bg-zinc-50 border border-zinc-200 rounded-xl px-4 py-3 focus-within:ring-2 focus-within:ring-zinc-900 outline-none transition-all"
+                />
+              </div>
+            </div>
+            
+            <div className="pt-4 border-t border-zinc-100">
+              <label className="block text-sm font-medium text-zinc-700 mb-1.5">{isAr ? 'كلمة المرور الجديدة (اختياري)' : 'New Password (Optional)'}</label>
+              <div className="relative">
+                <Lock className="w-5 h-5 text-zinc-400 absolute top-3.5 left-4" />
+                <input 
+                  type="password" 
+                  value={newPassword}
+                  onChange={e => setNewPassword(e.target.value)}
+                  placeholder={isAr ? 'اتركه فارغاً إذا لم ترغب بتغييره' : 'Leave empty to keep current'}
+                  className="w-full bg-zinc-50 border border-zinc-200 rounded-xl pl-12 pr-4 py-3 outline-none" 
+                />
+              </div>
+            </div>
+            
+            <div className="pt-6">
+              <button 
+                onClick={handleSaveProfile}
+                disabled={isSavingProfile}
+                className="w-full bg-zinc-900 text-white rounded-xl py-3.5 font-bold flex items-center justify-center gap-2 hover:bg-zinc-800 disabled:opacity-70 transition-all"
+              >
+                {isSavingProfile ? <Loader2 className="w-5 h-5 animate-spin" /> : <Save className="w-5 h-5" />}
+                {isSavingProfile ? (isAr ? 'جاري الحفظ...' : 'Saving...') : (isAr ? 'حفظ التعديلات' : 'Save Changes')}
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   if (step === 'my-bookings') {
     const now = new Date();
     now.setHours(0,0,0,0);
@@ -706,7 +825,7 @@ export function ClientApp() {
               const bookingDateObj = new Date(bookingDateTimeStr);
               const diffMs = bookingDateObj.getTime() - currentDateTime.getTime();
               const hoursDiff = diffMs / (1000 * 60 * 60);
-              const canCancel = (b.status === 'pending' || b.status === 'confirmed') && hoursDiff >= 24;
+              const canCancel = (b.status === 'pending' || b.status === 'confirmed'); // Allow cancellation for pending/confirmed
 
               return (
                 <div key={b.id} className="bg-white p-6 rounded-[24px] border border-zinc-100 shadow-sm flex flex-col md:flex-row gap-4 justify-between">
@@ -730,14 +849,23 @@ export function ClientApp() {
                     {b.status === 'confirmed' && (
                        <span className="text-xs text-zinc-400 font-mono">ID: {b.id.substring(0,8)}</span>
                     )}
-                    {canCancel && (
+                    <div className="flex items-center gap-2 mt-2 md:mt-0">
                       <button 
-                        onClick={() => handleCancelBooking(b.id)}
-                        className="text-xs font-bold px-3 py-1.5 rounded-lg bg-rose-50 text-rose-600 hover:bg-rose-100 transition-colors border border-rose-100 mt-2 md:mt-0"
+                        onClick={() => setPreviewBooking(b)}
+                        className="text-xs font-bold px-3 py-1.5 rounded-lg bg-zinc-50 text-zinc-600 hover:bg-zinc-100 transition-colors border border-zinc-200 flex items-center gap-1.5"
                       >
-                        {isAr ? 'إلغاء الحجز' : 'Cancel Booking'}
+                        <Eye className="w-3.5 h-3.5" />
+                        {isAr ? 'التفاصيل' : 'Details'}
                       </button>
-                    )}
+                      {canCancel && (
+                        <button 
+                          onClick={() => handleCancelBooking(b.id)}
+                          className="text-xs font-bold px-3 py-1.5 rounded-lg bg-rose-50 text-rose-600 hover:bg-rose-100 transition-colors border border-rose-100"
+                        >
+                          {isAr ? 'إلغاء' : 'Cancel'}
+                        </button>
+                      )}
+                    </div>
                   </div>
                 </div>
               );
@@ -757,9 +885,14 @@ export function ClientApp() {
           <h2 className="text-3xl md:text-4xl font-bold mb-4 leading-tight">
             {isAr ? 'اكتشف أفضل صالونات التجميل بالقرب منك' : 'Discover the best beauty salons near you'}
           </h2>
-          <button onClick={() => { fetchMyBookings(); setStep('my-bookings'); }} className="mt-4 bg-white/20 hover:bg-white/30 text-white px-6 py-2.5 rounded-full text-sm font-bold transition-colors">
-            {isAr ? 'عرض حجوزاتي' : 'View My Bookings'}
-          </button>
+          <div className="flex gap-3">
+            <button onClick={() => { fetchMyBookings(); setStep('my-bookings'); }} className="mt-4 bg-white/20 hover:bg-white/30 text-white px-6 py-2.5 rounded-full text-sm font-bold transition-colors">
+              {isAr ? 'عرض حجوزاتي' : 'View My Bookings'}
+            </button>
+            <button onClick={() => { fetchUserProfile(); setStep('profile'); }} className="mt-4 bg-white/20 hover:bg-white/30 text-white px-6 py-2.5 rounded-full text-sm font-bold transition-colors">
+              {isAr ? 'حسابي' : 'My Profile'}
+            </button>
+          </div>
           <div className="flex bg-white/10 backdrop-blur-md rounded-full p-1.5 mt-6 border border-white/20">
             <button 
               onClick={() => setFilterSalonType('men')}
@@ -899,6 +1032,80 @@ export function ClientApp() {
         </div>
       </section>
 
+
+      {/* Preview Modal */}
+      <AnimatePresence>
+        {previewBooking && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-zinc-900/50 backdrop-blur-sm"
+          >
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 20 }}
+              className="bg-white rounded-3xl w-full max-w-md overflow-hidden shadow-xl"
+            >
+              <div className="p-6 border-b border-zinc-100 flex justify-between items-center">
+                <h3 className="font-bold text-xl text-zinc-900">{isAr ? 'تفاصيل الحجز' : 'Booking Details'}</h3>
+                <button onClick={() => setPreviewBooking(null)} className="p-2 bg-zinc-50 rounded-full text-zinc-400 hover:text-zinc-700 transition-colors">
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+              <div className="p-6 space-y-6">
+                <div>
+                  <h4 className="text-zinc-500 text-sm font-medium mb-1">{isAr ? 'الصالون' : 'Salon'}</h4>
+                  <p className="font-bold text-zinc-900 text-lg">{isAr ? previewBooking.salon?.name_ar : previewBooking.salon?.name_en}</p>
+                </div>
+                <div className="flex justify-between">
+                  <div>
+                    <h4 className="text-zinc-500 text-sm font-medium mb-1">{isAr ? 'التاريخ' : 'Date'}</h4>
+                    <p className="font-bold text-zinc-900">{previewBooking.booking_date}</p>
+                  </div>
+                  <div className="text-right">
+                    <h4 className="text-zinc-500 text-sm font-medium mb-1">{isAr ? 'الوقت' : 'Time'}</h4>
+                    <p className="font-bold text-zinc-900">{previewBooking.booking_time?.substring(0,5)}</p>
+                  </div>
+                </div>
+                <div>
+                  <h4 className="text-zinc-500 text-sm font-medium mb-2">{isAr ? 'الخدمات' : 'Services'}</h4>
+                  <div className="space-y-2">
+                    {previewBooking.details?.map((d: any, idx: number) => (
+                      <div key={idx} className="flex justify-between items-center p-3 bg-zinc-50 rounded-xl">
+                        <span className="font-medium text-zinc-900">{isAr ? d.services?.name_ar : d.services?.name_en}</span>
+                        <span className="text-sm font-bold text-zinc-900">{currSymbol} {d.price}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+                <div className="flex justify-between items-center pt-4 border-t border-zinc-100">
+                  <span className="text-zinc-500 font-medium">{isAr ? 'الإجمالي' : 'Total'}</span>
+                  <span className="text-2xl font-bold text-zinc-900">{currSymbol} {previewBooking.total_amount}</span>
+                </div>
+                <div className="flex justify-center pt-2">
+                  <QRCodeSVG value={previewBooking.id} size={100} level="M" />
+                </div>
+                
+                {(previewBooking.status === 'pending' || previewBooking.status === 'confirmed') && (
+                  <div className="pt-4">
+                    <button 
+                      onClick={() => {
+                        handleCancelBooking(previewBooking.id);
+                        setPreviewBooking(null);
+                      }}
+                      className="w-full py-3.5 bg-rose-50 text-rose-600 rounded-xl font-bold hover:bg-rose-100 transition-colors border border-rose-100"
+                    >
+                      {isAr ? 'إلغاء الحجز' : 'Cancel Booking'}
+                    </button>
+                  </div>
+                )}
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
       {/* Global Toast Notification */}
       <AnimatePresence>
         {toast && (

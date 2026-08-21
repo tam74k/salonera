@@ -213,15 +213,15 @@ export function AuthFlow({ onLogin }: { onLogin: (role: 'client' | 'artist' | 'a
   };
 
   return (
-    <div className="min-h-screen bg-zinc-50 flex flex-col justify-center items-center p-4">
+    <div className="min-h-screen bg-stone-900/40 flex flex-col justify-center items-center p-4">
       <motion.div 
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="bg-white p-8 rounded-3xl shadow-sm border border-zinc-100 w-full max-w-md"
+        className="bg-stone-900 p-8 rounded-3xl shadow-md shadow-black/20 border border-stone-800/50 w-full max-w-md"
       >
         <div className="text-center mb-8">
-          <h2 className="text-3xl font-bold text-zinc-900 tracking-tight">SALONERA</h2>
-          <p className="text-zinc-500 mt-2">
+          <h2 className="text-3xl font-bold text-stone-50 tracking-tight">SALONERA</h2>
+          <p className="text-stone-400 mt-2">
             {step === 'login' ? t.login : step === 'register' ? t.register : t.verify_otp}
           </p>
         </div>
@@ -239,35 +239,35 @@ export function AuthFlow({ onLogin }: { onLogin: (role: 'client' | 'artist' | 'a
               
               
               <div>
-                <label className="block text-sm font-medium text-zinc-700 mb-1.5">{t.email}</label>
+                <label className="block text-sm font-medium text-stone-300 mb-1.5">{t.email}</label>
 
                 <div className="relative">
-                  <Mail className={`absolute top-1/2 -translate-y-1/2 w-5 h-5 text-zinc-400 ${isAr ? 'right-3' : 'left-3'}`} />
-                  <input type="email" required value={email} onChange={(e) => setEmail(e.target.value)} className={`w-full bg-zinc-50 border border-zinc-200 rounded-xl py-3 focus:ring-2 focus:ring-zinc-900 focus:border-zinc-900 outline-none transition-all ${isAr ? 'pr-10 pl-4' : 'pl-10 pr-4'}`} placeholder="email@example.com" dir="ltr" />
+                  <Mail className={`absolute top-1/2 -translate-y-1/2 w-5 h-5 text-stone-500 ${isAr ? 'right-3' : 'left-3'}`} />
+                  <input type="email" required value={email} onChange={(e) => setEmail(e.target.value)} className={`w-full bg-stone-900/40 border border-stone-800 rounded-xl py-3 focus:ring-2 focus:ring-amber-500 focus:border-amber-500 text-stone-100 outline-none transition-all ${isAr ? 'pr-10 pl-4' : 'pl-10 pr-4'}`} placeholder="email@example.com" dir="ltr" />
                 </div>
               </div>
               <div>
-                <label className="block text-sm font-medium text-zinc-700 mb-1.5">{t.password}</label>
+                <label className="block text-sm font-medium text-stone-300 mb-1.5">{t.password}</label>
                 <div className="relative">
-                  <Lock className={`absolute top-1/2 -translate-y-1/2 w-5 h-5 text-zinc-400 ${isAr ? 'right-3' : 'left-3'}`} />
-                  <input type="password" required value={password} onChange={(e) => setPassword(e.target.value)} className={`w-full bg-zinc-50 border border-zinc-200 rounded-xl py-3 focus:ring-2 focus:ring-zinc-900 focus:border-zinc-900 outline-none transition-all ${isAr ? 'pr-10 pl-4' : 'pl-10 pr-4'}`} placeholder="••••••••" />
+                  <Lock className={`absolute top-1/2 -translate-y-1/2 w-5 h-5 text-stone-500 ${isAr ? 'right-3' : 'left-3'}`} />
+                  <input type="password" required value={password} onChange={(e) => setPassword(e.target.value)} className={`w-full bg-stone-900/40 border border-stone-800 rounded-xl py-3 focus:ring-2 focus:ring-amber-500 focus:border-amber-500 text-stone-100 outline-none transition-all ${isAr ? 'pr-10 pl-4' : 'pl-10 pr-4'}`} placeholder="••••••••" />
                 </div>
               </div>
               
               <div className="flex justify-between items-center text-sm">
-                <button type="button" className="text-zinc-900 font-medium">{t.forgot_password}</button>
+                <button type="button" className="text-stone-50 font-medium">{t.forgot_password}</button>
               </div>
 
               <div className="pt-2">
-                <button type="submit" disabled={loading} className="w-full bg-zinc-900 hover:bg-zinc-800 text-white py-3.5 rounded-xl font-medium transition-colors mb-3 flex justify-center items-center gap-2 disabled:bg-zinc-500">
+                <button type="submit" disabled={loading} className="w-full bg-amber-500 hover:bg-amber-400 text-stone-950 font-bold border-none py-3.5 rounded-xl font-medium transition-colors mb-3 flex justify-center items-center gap-2 disabled:bg-zinc-500">
                   {loading && <Loader2 className="w-5 h-5 animate-spin" />}
                   {t.login}
                 </button>
               </div>
               
-              <p className="text-center text-sm text-zinc-500 mt-6">
+              <p className="text-center text-sm text-stone-400 mt-6">
                 {isAr ? 'ليس لديك حساب؟ ' : 'Don\'t have an account? '}
-                <button type="button" onClick={() => { setStep('register'); setError(''); setEmail(''); setPassword(''); }} className="text-zinc-900 font-bold">{t.register}</button>
+                <button type="button" onClick={() => { setStep('register'); setError(''); setEmail(''); setPassword(''); }} className="text-stone-50 font-bold">{t.register}</button>
               </p>
             </motion.form>
           )}
@@ -275,92 +275,92 @@ export function AuthFlow({ onLogin }: { onLogin: (role: 'client' | 'artist' | 'a
           {step === 'register' && (
             <motion.form key="register" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-zinc-700 mb-1.5">{isAr ? 'نوع الحساب' : 'Account Type'}</label>
+                <label className="block text-sm font-medium text-stone-300 mb-1.5">{isAr ? 'نوع الحساب' : 'Account Type'}</label>
                 <div className="relative">
                   <select 
                     value={selectedRole === 'artist' ? 'client' : selectedRole} // Fallback
                     onChange={(e) => setSelectedRole(e.target.value as any)}
-                    className={`w-full bg-zinc-50 border border-zinc-200 rounded-xl py-3 appearance-none focus:ring-2 focus:ring-zinc-900 focus:border-zinc-900 outline-none transition-all ${isAr ? 'pl-4 pr-10' : 'pl-10 pr-4'}`}
+                    className={`w-full bg-stone-900/40 border border-stone-800 rounded-xl py-3 appearance-none focus:ring-2 focus:ring-amber-500 focus:border-amber-500 text-stone-100 outline-none transition-all ${isAr ? 'pl-4 pr-10' : 'pl-10 pr-4'}`}
                   >
                     <option value="client">{isAr ? 'عميل' : 'Client'}</option>
                     <option value="admin">{isAr ? 'إدارة الصالون' : 'Salon Admin'}</option>
                   </select>
-                  <ChevronDown className={`absolute top-1/2 -translate-y-1/2 w-5 h-5 text-zinc-400 pointer-events-none ${isAr ? 'right-3' : 'left-3'}`} />
+                  <ChevronDown className={`absolute top-1/2 -translate-y-1/2 w-5 h-5 text-stone-500 pointer-events-none ${isAr ? 'right-3' : 'left-3'}`} />
                 </div>
               </div>
               
               
               <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-sm font-medium text-zinc-700 mb-1.5">{isAr ? 'الاسم الأول (عربي)' : 'First Name (Ar)'}</label>
-                    <input type="text" required value={firstNameAr} onChange={(e) => setFirstNameAr(e.target.value)} className="w-full bg-zinc-50 border border-zinc-200 rounded-xl px-4 py-3 outline-none" />
+                    <label className="block text-sm font-medium text-stone-300 mb-1.5">{isAr ? 'الاسم الأول (عربي)' : 'First Name (Ar)'}</label>
+                    <input type="text" required value={firstNameAr} onChange={(e) => setFirstNameAr(e.target.value)} className="w-full bg-stone-900/40 border border-stone-800 rounded-xl px-4 py-3 outline-none" />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-zinc-700 mb-1.5">{isAr ? 'الاسم الأول (انجليزي)' : 'First Name (En)'}</label>
-                    <input type="text" required value={firstNameEn} onChange={(e) => setFirstNameEn(e.target.value)} className="w-full bg-zinc-50 border border-zinc-200 rounded-xl px-4 py-3 outline-none" />
+                    <label className="block text-sm font-medium text-stone-300 mb-1.5">{isAr ? 'الاسم الأول (انجليزي)' : 'First Name (En)'}</label>
+                    <input type="text" required value={firstNameEn} onChange={(e) => setFirstNameEn(e.target.value)} className="w-full bg-stone-900/40 border border-stone-800 rounded-xl px-4 py-3 outline-none" />
                   </div>
               </div>
 
               {selectedRole === 'admin' && (
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-sm font-medium text-zinc-700 mb-1.5">{isAr ? 'اسم الصالون (عربي)' : 'Salon Name (Ar)'}</label>
-                    <input type="text" required value={salonNameAr} onChange={(e) => setSalonNameAr(e.target.value)} className="w-full bg-zinc-50 border border-zinc-200 rounded-xl px-4 py-3 outline-none" placeholder="مثال: صالون الجمال" />
+                    <label className="block text-sm font-medium text-stone-300 mb-1.5">{isAr ? 'اسم الصالون (عربي)' : 'Salon Name (Ar)'}</label>
+                    <input type="text" required value={salonNameAr} onChange={(e) => setSalonNameAr(e.target.value)} className="w-full bg-stone-900/40 border border-stone-800 rounded-xl px-4 py-3 outline-none" placeholder="مثال: صالون الجمال" />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-zinc-700 mb-1.5">{isAr ? 'اسم الصالون (انجليزي)' : 'Salon Name (En)'}</label>
-                    <input type="text" required value={salonNameEn} onChange={(e) => setSalonNameEn(e.target.value)} className="w-full bg-zinc-50 border border-zinc-200 rounded-xl px-4 py-3 outline-none" placeholder="e.g: Beauty Salon" />
+                    <label className="block text-sm font-medium text-stone-300 mb-1.5">{isAr ? 'اسم الصالون (انجليزي)' : 'Salon Name (En)'}</label>
+                    <input type="text" required value={salonNameEn} onChange={(e) => setSalonNameEn(e.target.value)} className="w-full bg-stone-900/40 border border-stone-800 rounded-xl px-4 py-3 outline-none" placeholder="e.g: Beauty Salon" />
                   </div>
                 </div>
               )}
 
               <div>
-                <label className="block text-sm font-medium text-zinc-700 mb-1.5">{t.email}</label>
+                <label className="block text-sm font-medium text-stone-300 mb-1.5">{t.email}</label>
                 <div className="relative">
-                  <Mail className={`absolute top-1/2 -translate-y-1/2 w-5 h-5 text-zinc-400 ${isAr ? 'right-3' : 'left-3'}`} />
-                  <input type="email" required value={email} onChange={(e) => setEmail(e.target.value)} className={`w-full bg-zinc-50 border border-zinc-200 rounded-xl py-3 focus:ring-2 focus:ring-zinc-900 focus:border-zinc-900 outline-none transition-all ${isAr ? 'pr-10 pl-4' : 'pl-10 pr-4'}`} placeholder="email@example.com" dir="ltr" />
+                  <Mail className={`absolute top-1/2 -translate-y-1/2 w-5 h-5 text-stone-500 ${isAr ? 'right-3' : 'left-3'}`} />
+                  <input type="email" required value={email} onChange={(e) => setEmail(e.target.value)} className={`w-full bg-stone-900/40 border border-stone-800 rounded-xl py-3 focus:ring-2 focus:ring-amber-500 focus:border-amber-500 text-stone-100 outline-none transition-all ${isAr ? 'pr-10 pl-4' : 'pl-10 pr-4'}`} placeholder="email@example.com" dir="ltr" />
                 </div>
               </div>
               <div>
-                <label className="block text-sm font-medium text-zinc-700 mb-1.5">{t.mobile_number}</label>
+                <label className="block text-sm font-medium text-stone-300 mb-1.5">{t.mobile_number}</label>
                 <div className="relative" dir="ltr">
                   <PhoneInput
                     international
                     defaultCountry={countryCode || 'SA'}
                     value={mobile}
                     onChange={(val: any) => setMobile(val || '')}
-                    className="w-full bg-zinc-50 border border-zinc-200 rounded-xl px-4 py-3 focus-within:ring-2 focus-within:ring-zinc-900 outline-none transition-all"
+                    className="w-full bg-stone-900/40 border border-stone-800 rounded-xl px-4 py-3 focus-within:ring-2 focus-within:ring-zinc-900 outline-none transition-all"
                   />
                 </div>
               </div>
               <div>
-                <label className="block text-sm font-medium text-zinc-700 mb-1.5">{t.password}</label>
+                <label className="block text-sm font-medium text-stone-300 mb-1.5">{t.password}</label>
                 <div className="relative">
-                  <Lock className={`absolute top-1/2 -translate-y-1/2 w-5 h-5 text-zinc-400 ${isAr ? 'right-3' : 'left-3'}`} />
-                  <input type="password" required value={password} onChange={(e) => setPassword(e.target.value)} className={`w-full bg-zinc-50 border border-zinc-200 rounded-xl py-3 focus:ring-2 focus:ring-zinc-900 focus:border-zinc-900 outline-none transition-all ${isAr ? 'pr-10 pl-4' : 'pl-10 pr-4'}`} placeholder="••••••••" />
+                  <Lock className={`absolute top-1/2 -translate-y-1/2 w-5 h-5 text-stone-500 ${isAr ? 'right-3' : 'left-3'}`} />
+                  <input type="password" required value={password} onChange={(e) => setPassword(e.target.value)} className={`w-full bg-stone-900/40 border border-stone-800 rounded-xl py-3 focus:ring-2 focus:ring-amber-500 focus:border-amber-500 text-stone-100 outline-none transition-all ${isAr ? 'pr-10 pl-4' : 'pl-10 pr-4'}`} placeholder="••••••••" />
                 </div>
               </div>
               
               <div className="pt-4">
-                <button type="button" onClick={startRegistration} className="w-full bg-zinc-900 hover:bg-zinc-800 text-white py-3.5 rounded-xl font-medium transition-colors flex items-center justify-center gap-2">
+                <button type="button" onClick={startRegistration} className="w-full bg-amber-500 hover:bg-amber-400 text-stone-950 font-bold border-none py-3.5 rounded-xl font-medium transition-colors flex items-center justify-center gap-2">
                   <MessageSquare className="w-5 h-5" />
                   {t.send_otp} (WhatsApp)
                 </button>
               </div>
               
-              <p className="text-center text-sm text-zinc-500 mt-6">
+              <p className="text-center text-sm text-stone-400 mt-6">
                 {isAr ? 'لديك حساب بالفعل؟ ' : 'Already have an account? '}
-                <button type="button" onClick={() => { setStep('login'); setError(''); setEmail(''); setPassword(''); }} className="text-zinc-900 font-bold">{t.login}</button>
+                <button type="button" onClick={() => { setStep('login'); setError(''); setEmail(''); setPassword(''); }} className="text-stone-50 font-bold">{t.login}</button>
               </p>
             </motion.form>
           )}
 
           {step === 'otp' && (
             <motion.form key="otp" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} onSubmit={handleVerifyOTP} className="space-y-6 text-center">
-              <div className="w-16 h-16 bg-zinc-100 rounded-full flex items-center justify-center mx-auto text-zinc-900 mb-4">
+              <div className="w-16 h-16 bg-stone-800/50 rounded-full flex items-center justify-center mx-auto text-stone-50 mb-4">
                 <MessageSquare className="w-8 h-8" />
               </div>
-              <p className="text-zinc-600 text-sm">
+              <p className="text-stone-400 text-sm">
                 {isAr ? 'تم إرسال كود التحقق عبر الواتساب إلى رقمك.' : 'OTP code has been sent via WhatsApp to your number.'}
               </p>
               
@@ -386,19 +386,19 @@ export function AuthFlow({ onLogin }: { onLogin: (role: 'client' | 'artist' | 'a
                         document.getElementById(`otp-${i - 1}`)?.focus();
                       }
                     }}
-                    className="w-14 h-14 text-center text-2xl font-bold bg-zinc-50 border border-zinc-200 rounded-xl focus:ring-2 focus:ring-zinc-900 focus:border-zinc-900 outline-none transition-all" 
+                    className="w-14 h-14 text-center text-2xl font-bold bg-stone-900/40 border border-stone-800 rounded-xl focus:ring-2 focus:ring-amber-500 focus:border-amber-500 text-stone-100 outline-none transition-all" 
                   />
                 ))}
               </div>
               
               <div className="pt-2">
-                <button type="submit" disabled={loading} className="w-full bg-zinc-900 hover:bg-zinc-800 text-white py-3.5 rounded-xl font-medium transition-colors flex justify-center items-center gap-2 disabled:bg-zinc-500">
+                <button type="submit" disabled={loading} className="w-full bg-amber-500 hover:bg-amber-400 text-stone-950 font-bold border-none py-3.5 rounded-xl font-medium transition-colors flex justify-center items-center gap-2 disabled:bg-zinc-500">
                   {loading && <Loader2 className="w-5 h-5 animate-spin" />}
                   {t.verify_otp}
                 </button>
               </div>
               
-              <button type="button" onClick={() => setStep('register')} className="text-sm text-zinc-500 hover:text-zinc-900 font-medium transition-colors">
+              <button type="button" onClick={() => setStep('register')} className="text-sm text-stone-400 hover:text-stone-200 font-medium transition-colors">
                 {isAr ? 'رجوع' : 'Back'}
               </button>
             </motion.form>

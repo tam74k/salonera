@@ -1,23 +1,23 @@
 const fs = require('fs');
-let content = fs.readFileSync('src/screens/ClientApp.tsx', 'utf8');
 
-content = content.replace(
-  "{salon.image_url && <img src={salon.image_url} alt={isAr ? salon.name_ar : salon.name_en}",
-  "{(salon.images?.[0] || salon.image_url) && <img src={salon.images?.[0] || salon.image_url} alt={isAr ? salon.name_ar : salon.name_en}"
-);
+function fix(filePath) {
+    let content = fs.readFileSync(filePath, 'utf8');
 
-const memberAvatarOld = `className={\`flex-shrink-0 snap-start px-6 py-3 rounded-xl border-2 font-bold cursor-pointer transition-colors \${selectedStaff === member.id ? 'border-indigo-600 bg-indigo-50 text-indigo-700' : 'border-slate-100 bg-white text-slate-600 hover:border-slate-200'}\`}`;
-const memberAvatarNew = `className={\`flex-shrink-0 snap-start px-6 py-3 rounded-xl border-2 font-bold cursor-pointer transition-colors flex items-center gap-3 \${selectedStaff === member.id ? 'border-indigo-600 bg-indigo-50 text-indigo-700' : 'border-slate-100 bg-white text-slate-600 hover:border-slate-200'}\`}`;
-content = content.replace(memberAvatarOld, memberAvatarNew);
+    // Replace object-cover with object-contain for all salon images in ClientApp
+    // Also remove group-hover:scale-105 and group-hover:rotate-1
+    content = content.replace(/object-cover group-hover:scale-105 transition-transform duration-500/g, 'object-contain transition-transform duration-500 p-2');
+    content = content.replace(/object-cover group-hover:scale-110 group-hover:rotate-1 transition-all duration-1000 ease-out/g, 'object-contain transition-all duration-1000 ease-out p-4');
+    
+    // For salon details banner:
+    content = content.replace(/className="absolute inset-0 w-full h-full object-cover transition-opacity duration-300"/g, 'className="absolute inset-0 w-full h-full object-contain transition-opacity duration-300 p-2"');
+    content = content.replace(/className="absolute inset-0 w-full h-full object-cover"/g, 'className="absolute inset-0 w-full h-full object-contain p-2"');
 
-const memberNameOld = `{isAr ? (member.profile?.first_name_ar || 'فني') : (member.profile?.first_name_en || 'Artist')}`;
-const memberNameNew = `
-                  {member.profile?.avatar_url && (
-                    <img src={member.profile.avatar_url} alt="" className="w-8 h-8 rounded-full object-cover" />
-                  )}
-                  {isAr ? (member.profile?.first_name_ar || 'فني') : (member.profile?.first_name_en || 'Artist')}
-`;
+    // For dashboard salon images:
+    content = content.replace(/w-full h-32 object-cover/g, 'w-full h-32 object-contain p-1 bg-stone-900/50');
+    
+    fs.writeFileSync(filePath, content);
+}
 
-content = content.replace(memberNameOld, memberNameNew);
-
-fs.writeFileSync('src/screens/ClientApp.tsx', content);
+fix('src/screens/ClientApp.tsx');
+fix('src/screens/Dashboards.tsx');
+console.log('Images fixed');
